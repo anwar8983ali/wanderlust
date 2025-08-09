@@ -1,0 +1,274 @@
+<% layout('layouts/boilerPlate') %>
+
+<div class="container mt-4">
+  <!-- Listing Header -->
+  <div class="row mb-4">
+    <div class="col-12 text-center">
+      <h2 class="fw-bold"><%= listing.title %></h2>
+    </div>
+  </div>
+
+  <!-- Listing Card -->
+  <div class="row justify-content-center">
+    <div class="col-md-10">
+      <div class="card shadow-sm">
+        <% if (listing.image && listing.image.url) { %>
+          <img src="<%= listing.image.url %>" class="card-img-top listing-img" alt="<%= listing.title %>">
+        <% } %>
+        
+        <div class="card-body">
+          <p class="text-muted">Owned by <strong><%= listing.owner.username %></strong></p>
+          <p class="card-text"><%= listing.description %></p>
+          
+          <div class="d-flex flex-wrap gap-4 mt-4">
+            <div>
+              <span class="fw-bold">Price:</span>
+              <span class="text-success">₹<%= listing.price.toLocaleString("en-IN") %></span>
+            </div>
+            <div>
+              <span class="fw-bold">Location:</span>
+              <span><%= listing.location %>, <%= listing.country %></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Owner Actions -->
+  <% if(currUser && listing.owner._id.equals(currUser._id)) { %>
+    <div class="d-flex gap-3 justify-content-center mt-4">
+      <a href="/listings/<%= listing._id %>/edit" class="btn btn-primary px-4">
+        <i class="fas fa-edit me-2"></i>Edit
+      </a>
+      
+      <button type="button" class="btn btn-danger px-4" data-bs-toggle="modal" data-bs-target="#confirmDeleteModal">
+        <i class="fas fa-trash-alt me-2"></i>Delete
+      </button>
+    </div>
+  <% } %>
+
+  <!-- Delete Confirmation Modal -->
+  <div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header bg-danger text-white">
+          <h5 class="modal-title">Confirm Deletion</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p>Are you sure you want to delete "<strong><%= listing.title %></strong>"?</p>
+          <p class="text-danger">This action cannot be undone.</p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <form method="POST" action="/listings/<%= listing._id %>?_method=DELETE">
+            <button type="submit" class="btn btn-danger">Delete Listing</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="my-5">
+
+  <!-- Review Section -->
+  <div class="row justify-content-center">
+    <div class="col-md-10">
+      <!-- Review Form -->
+      <% if(currUser) { %>
+        <div class="card mb-5 shadow-sm">
+          <div class="card-body">
+            <h4 class="card-title mb-4">Leave a Review</h4>
+            <form action="/listings/<%= listing._id %>/reviews" method="POST">
+              <!-- Star Rating Input -->
+              <div class="mb-4">
+                <label class="form-label fw-bold">Rating</label>
+                <div class="star-rating">
+                  <input type="radio" id="star5" name="review[rating]" value="5" />
+                  <label for="star5" title="5 stars"><i class="fas fa-star"></i></label>
+                  
+                  <input type="radio" id="star4" name="review[rating]" value="4" />
+                  <label for="star4" title="4 stars"><i class="fas fa-star"></i></label>
+                  
+                  <input type="radio" id="star3" name="review[rating]" value="3" />
+                  <label for="star3" title="3 stars"><i class="fas fa-star"></i></label>
+                  
+                  <input type="radio" id="star2" name="review[rating]" value="2" />
+                  <label for="star2" title="2 stars"><i class="fas fa-star"></i></label>
+                  
+                  <input type="radio" id="star1" name="review[rating]" value="1" required />
+                  <label for="star1" title="1 star"><i class="fas fa-star"></i></label>
+                </div>
+              </div>
+              
+              <!-- Comment Input -->
+              <div class="mb-4">
+                <label for="comment" class="form-label fw-bold">Comment</label>
+                <textarea class="form-control" name="review[comment]" id="comment" rows="3" required></textarea>
+              </div>
+              
+              <button type="submit" class="btn btn-primary">
+                <i class="fas fa-paper-plane me-2"></i>Submit Review
+              </button>
+            </form>
+          </div>
+        </div>
+      <% } %>
+
+      <!-- Reviews List -->
+      <div class="mb-4">
+        <h4 class="mb-4">
+          <i class="fas fa-comments me-2"></i>
+          Reviews (<%= listing.reviews.length %>)
+        </h4>
+        
+        <% if(listing.reviews.length === 0) { %>
+          <div class="alert alert-info">No reviews yet. Be the first to review!</div>
+        <% } else { %>
+          <div class="row g-4">
+            <% listing.reviews.forEach(review => { %>
+              <div class="col-md-6">
+                <div class="card h-100 shadow-sm">
+                  <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                      <h5 class="card-title mb-0">
+                        <i class="fas fa-user-circle me-2"></i>
+                        <%= review.auther.username %>
+                      </h5>
+                      <div class="star-rating-display">
+                        <% for(let i=1; i<=5; i++) { %>
+                          <i class="fas fa-star <%= i <= review.rating ? 'text-warning' : 'text-secondary' %>"></i>
+                        <% } %>
+                      </div>
+                    </div>
+                    <p class="card-text"><%= review.comment %></p>
+                  </div>
+                  
+                  <% if(currUser && (currUser._id.equals(review.auther._id) || currUser._id.equals(listing.owner._id))) { %>
+                    <div class="card-footer bg-transparent">
+                      <form action="/listings/<%=listing._id %>/reviews/<%=review._id%>?_method=DELETE" method="post">
+                        <button class="btn btn-sm btn-outline-danger">
+                          <i class="fas fa-trash-alt me-1"></i> Delete
+                        </button>
+                      </form>
+                    </div>
+                  <% } %>
+                </div>
+              </div>
+            <% }) %>
+          </div>
+        <% } %>
+      </div>
+    </div>
+    <div id="map" style="height: 400px;"></div>
+  </div>
+</div>
+
+
+<style>
+  .listing-img {
+    height: 400px;
+    object-fit: cover;
+  }
+  
+  /* Star Rating Input */
+  .star-rating {
+    display: flex;
+    flex-direction: row-reverse;
+    justify-content: flex-start;
+  }
+  
+  .star-rating input {
+    display: none;
+  }
+  
+  .star-rating label {
+    color: #ddd;
+    font-size: 1.5rem;
+    padding: 0 2px;
+    cursor: pointer;
+    transition: color 0.2s;
+  }
+  
+  .star-rating input:checked ~ label,
+  .star-rating label:hover,
+  .star-rating label:hover ~ label {
+    color: #ffc107;
+  }
+  
+  .star-rating input:checked + label:hover,
+  .star-rating input:checked ~ label:hover,
+  .star-rating label:hover ~ input:checked ~ label {
+    color: #ffc107;
+  }
+  
+  /* Star Rating Display */
+  .star-rating-display {
+    font-size: 1.2rem;
+  }
+  
+  .star-rating-display .fa-star {
+    margin: 0 1px;
+  }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  // Highlight stars on hover and click
+  const stars = document.querySelectorAll('.star-rating label');
+  const radioInputs = document.querySelectorAll('.star-rating input[type="radio"]');
+  
+  stars.forEach(star => {
+    star.addEventListener('mouseover', function() {
+      const starValue = parseInt(this.getAttribute('for').replace('star', ''));
+      highlightStars(starValue);
+    });
+    
+    star.addEventListener('mouseout', function() {
+      const checkedStar = document.querySelector('.star-rating input:checked');
+      if (checkedStar) {
+        const checkedValue = parseInt(checkedStar.value);
+        highlightStars(checkedValue);
+      } else {
+        resetStars();
+      }
+    });
+    
+    star.addEventListener('click', function() {
+      const starValue = parseInt(this.getAttribute('for').replace('star', ''));
+      highlightStars(starValue);
+    });
+  });
+  
+  radioInputs.forEach(input => {
+    input.addEventListener('change', function() {
+      const checkedValue = parseInt(this.value);
+      highlightStars(checkedValue);
+    });
+  });
+  
+  function highlightStars(upTo) {
+    for (let i = 1; i <= 5; i++) {
+      const star = document.querySelector(`.star-rating label[for="star${i}"]`);
+      if (i <= upTo) {
+        star.style.color = '#ffc107';
+      } else {
+        star.style.color = '#ddd';
+      }
+    }
+  }
+  
+  function resetStars() {
+    document.querySelectorAll('.star-rating label').forEach(star => {
+      star.style.color = '#ddd';
+    });
+  }
+  
+  // Initialize with any pre-selected rating
+  const initialChecked = document.querySelector('.star-rating input:checked');
+  if (initialChecked) {
+    highlightStars(parseInt(initialChecked.value));
+  }
+});
+</script>
