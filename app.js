@@ -103,8 +103,6 @@ app.use("/listings",listingRouter);
 app.use("/listings/:id/reviews",reviewRouter);
 app.use("/",userRouter);
 
-const searchRoutes = require("./routes/search");
-app.use(searchRoutes);
 
 
 // 404 Route - Fixed version
