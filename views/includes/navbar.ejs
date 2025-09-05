@@ -30,10 +30,12 @@
 
       <div class="navbar-nav ms-auto">
         <!-- SEARCH FORM -->
-        <form class="d-flex" method="get"  action="/search">
+        <form class="d-flex" action="/search" method="get" >
           <input 
             class="form-control me-2 search-input" 
             type="search" 
+            name="q"
+            value="<%= query || '' %>"
             placeholder="Search destinations" 
             aria-label="Search"
             id="navbarSearchInput"
