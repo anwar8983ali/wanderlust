@@ -1,9 +1,11 @@
 const searchInput = document.getElementById('navbarSearchInput');
-const originalListings = document.getElementById('originalListings');
 const searchResultsDiv = document.getElementById('searchResults');
+const originalListings = document.getElementById('originalListings'); 
 const searchForm = document.getElementById('navbarSearchForm');
 
-if(searchForm) searchForm.addEventListener('submit', e => e.preventDefault());
+if(searchForm){
+  searchForm.addEventListener('submit', e => e.preventDefault());
+}
 
 let timeout;
 if(searchInput){
@@ -14,14 +16,15 @@ if(searchInput){
 }
 
 async function performSearch() {
-  const query = searchInput.value.trim();
+  const query = searchInput.value.trim().toLowerCase();
 
   if(!query){
-    searchResultsDiv.innerHTML = '';
-    originalListings.style.display = 'flex';
+    searchResultsDiv.innerHTML = '';           // clear search results
+    originalListings.style.display = 'flex';   // show original listings
     return;
   }
 
+  // Hide original listings while searching
   originalListings.style.display = 'none';
 
   try {
@@ -36,18 +39,18 @@ async function performSearch() {
     searchResultsDiv.innerHTML = listings.map(l => `
       <a href="/listings/${l._id}" class="listing-link">
         <div class="card listing-card">
-          <img src="${l.image?.url || 'default.jpg'}" class="card-img-top" style="height:20rem;">
+          <img src="${l.image?.url || 'default.jpg'}" class="card-img-top" alt="${l.title}" style="height:20rem;">
+          <div class="card-img-overlay"></div>
           <div class="card-body">
             <p class="card-text">
               <b>${l.title}</b><br>
               &#8377; ${l.price?.toLocaleString("en-IN") || 'N/A'}/night
-              <i class="tax-info">+18% GST</i>
+              <i class="tax-info">  &nbsp;&nbsp;+18% GST</i>
             </p>
           </div>
         </div>
       </a>
     `).join('');
-
   } catch(err){
     searchResultsDiv.innerHTML = "<p style='margin:2rem'>Error fetching results</p>";
     console.error(err);
