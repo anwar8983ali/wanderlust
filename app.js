@@ -110,14 +110,12 @@ const Listing = require("./models/listing"); // your MongoDB model
 app.get("/search", async (req, res) => {
   const query = req.query.q?.trim(); // trim extra spaces
 
+  // If query is empty or only spaces → no results
   if (!query) {
-    // If search input is empty, show all listings
-    // const listings = await Listing.find({});
-    // return res.render("search/searchResults", { listings });
-    res.send("No match Found");
+    return res.render("search/searchResults", { listings: [], query });
   }
 
-  // Search title OR location (case-insensitive)
+  // Search by title OR location (case-insensitive)
   const listings = await Listing.find({
     $or: [
       { title: { $regex: query, $options: "i" } },
@@ -125,12 +123,9 @@ app.get("/search", async (req, res) => {
     ],
   });
 
-  res.render("search/searchResults", { listings });
+  // Render only matching listings
+  res.render("search/searchResults", { listings, query });
 });
-
-
-
-
 
 
 
