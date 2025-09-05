@@ -88,6 +88,7 @@ app.use((req,res,next)=>{
    next();
 })
 
+
 app.get("/demouser",async(req,res,next)=>{
   let fakeUser=new User({
     email:"student@gmail.com",
@@ -102,6 +103,10 @@ app.get("/demouser",async(req,res,next)=>{
 app.use("/listings",listingRouter);
 app.use("/listings/:id/reviews",reviewRouter);
 app.use("/",userRouter);
+
+
+
+
 
 
 

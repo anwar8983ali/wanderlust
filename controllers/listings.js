@@ -70,3 +70,24 @@ module.exports.deleteListing=async (req, res) => {
   req.flash("success","listing deleted");
   res.redirect("/listings");
 };
+
+
+// Live search controller
+exports.searchListings = async (req, res) => {
+    const { query } = req.query;
+    if (!query) return res.json([]); // return empty array if query is empty
+
+    try {
+        const listings = await Listing.find({
+            $or: [
+                { title: { $regex: query, $options: 'i' } },
+                { description: { $regex: query, $options: 'i' } },
+                { location: { $regex: query, $options: 'i' } },
+                { country: { $regex: query, $options: 'i' } }
+            ]
+        }).limit(10); // limit results for fast response
+        res.json(listings);
+    } catch (err) {
+        res.status(500).json({ message: "Server error", error: err.message });
+    }
+};

@@ -30,10 +30,19 @@
       </div>
 
       <div class="navbar-nav ms-auto">
-        <form class="d-flex" role="search">
-        <input class="form-control me-2 search-input" type="search" placeholder="Search destinations" aria-label="Search"/>
-        <button class="btn btn-search" type="submit"><i class="fa-solid fa-magnifying-glass"></i>Search</button>
-      </form>
+       <form class="d-flex" role="search" action="/listings/search" method="GET">
+  <input 
+    class="form-control me-2 search-input" 
+    type="search" 
+    placeholder="Search destinations" 
+    aria-label="Search"
+    name="q"
+  />
+  <button class="btn btn-search" type="submit">
+    <i class="fa-solid fa-magnifying-glass"></i>Search
+  </button>
+</form>
+
       </div>
 
 

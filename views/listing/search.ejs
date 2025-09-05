@@ -1,0 +1,27 @@
+<%- include("../partials/header") %>
+
+<div class="container mt-4">
+  <h3>Search Results for "<%= query %>"</h3>
+
+  <% if(listings.length === 0){ %>
+    <p>No listings found.</p>
+  <% } else { %>
+    <div class="row">
+      <% listings.forEach(listing => { %>
+        <div class="col-md-4 mb-3">
+          <div class="card">
+            <img src="<%= listing.image %>" class="card-img-top" alt="<%= listing.title %>">
+            <div class="card-body">
+              <h5 class="card-title"><%= listing.title %></h5>
+              <p class="card-text"><%= listing.description.substring(0,100) %>...</p>
+              <a href="/listings/<%= listing._id %>" class="btn btn-primary">View</a>
+            </div>
+          </div>
+        </div>
+      <% }) %>
+    </div>
+  <% } %>
+</div>
+
+<%- include("../partials/footer") %>
+
