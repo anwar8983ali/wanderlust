@@ -105,7 +105,28 @@ app.get("/demouser",async(req,res,next)=>{
 app.use("/listings",listingRouter);
 app.use("/listings/:id/reviews",reviewRouter);
 app.use("/",userRouter);
-app.use('/search', searchRoutes);
+const Listing = require("./models/listing"); // your MongoDB model
+
+// Search route
+app.get("/search", async (req, res) => {
+  const query = req.query.q; // get the search input
+  if (!query) {
+    // If search is empty, show all listings
+    const listings = await Listing.find({});
+    return res.render("index", { listings });
+  }
+
+  // Search in title OR location (case-insensitive)
+  const listings = await Listing.find({
+    $or: [
+      { title: { $regex: query, $options: "i" } },
+      { location: { $regex: query, $options: "i" } },
+    ],
+  });
+
+  res.render("search/searchResults.ejs", { listings });
+});
+
 
 
 

@@ -1,0 +1,14 @@
+<% layout('layouts/boilerPlate') %>
+<div>
+  <% if (listings.length === 0) { %>
+    <p>No results found!</p>
+  <% } else { %>
+    <% listings.forEach(listing => { %>
+      <div>
+        <h2><%= listing.title %></h2>
+        <p><%= listing.location %> - ₹<%= listing.price %></p>
+        <img src="<%= listing.image %>" width="200"/>
+      </div>
+    <% }) %>
+  <% } %>
+</div>
