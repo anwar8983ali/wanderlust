@@ -113,7 +113,7 @@ app.get("/search", async (req, res) => {
   if (!query) {
     // If search is empty, show all listings
     const listings = await Listing.find({});
-    return res.render("index", { listings });
+    return res.render("search/searchResults", { listings });
   }
 
   // Search in title OR location (case-insensitive)
