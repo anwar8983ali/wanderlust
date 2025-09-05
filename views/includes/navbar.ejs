@@ -15,7 +15,6 @@
     border-radius:25px;
     padding:0.5rem 3rem 0.5rem 3rem;
   }
-
 </style>
 
 <nav class="navbar navbar-expand-md bg-body-light border-bottom sticky-top">
@@ -30,31 +29,30 @@
       </div>
 
       <div class="navbar-nav ms-auto">
-       <form class="d-flex" role="search" action="/listings/search" method="GET">
-  <input 
-    class="form-control me-2 search-input" 
-    type="search" 
-    placeholder="Search destinations" 
-    aria-label="Search"
-    name="q"
-  />
-  <button class="btn btn-search" type="submit">
-    <i class="fa-solid fa-magnifying-glass"></i>Search
-  </button>
-</form>
-
+        <!-- SEARCH FORM -->
+        <form class="d-flex" id="navbarSearchForm">
+          <input 
+            class="form-control me-2 search-input" 
+            type="search" 
+            placeholder="Search destinations" 
+            aria-label="Search"
+            id="navbarSearchInput"
+          />
+          <button class="btn btn-search" type="submit">
+            <i class="fa-solid fa-magnifying-glass"></i>Search
+          </button>
+        </form>
       </div>
-
 
       <div class="navbar-nav ms-auto">
         <a class="nav-link" href="listings/new">Airbnb your home</a>
         <% if(!currUser){ %>
            <b><a class="nav-link" href="/signup">Sign Up</a></b>
            <b><a class="nav-link" href="/login">Log in</a></b>
-        <%}%>
+        <% } %>
         <% if(currUser){ %>
             <a class="nav-link" href="logout">Log out</a>
-       <% } %>
+        <% } %>
       </div>
     </div>
   </div>

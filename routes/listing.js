@@ -33,8 +33,5 @@ router.route("/:id")
 router.get("/:id/edit", isLoggedIn, isOwner, wrapAsync(listingController.editListing));
 
 
-// Live search route
-router.get('/search', listingController.searchListings);
-
 module.exports = router;
 
