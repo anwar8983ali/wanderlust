@@ -120,6 +120,7 @@ app.get("/search", async (req, res) => {
     $or: [
       { title: { $regex: query, $options: "i" } },
       { location: { $regex: query, $options: "i" } },
+      { country: { $regex: query, $options: "i" } } 
     ],
   });
 
