@@ -14,19 +14,18 @@ if(searchInput){
 }
 
 async function performSearch() {
-  const query = searchInput.value.trim().toLowerCase();
+  const query = searchInput.value.trim();
 
   if(!query){
-    searchResultsDiv.innerHTML = '';           // clear search results
-    originalListings.style.display = 'flex';   // show original listings
+    searchResultsDiv.innerHTML = '';
+    originalListings.style.display = 'flex';
     return;
   }
 
-  // Hide original listings while searching
   originalListings.style.display = 'none';
 
   try {
-    const res = await fetch(`/search?query=${encodeURIComponent(query)}`);
+    const res = await fetch(`/listings/search?query=${encodeURIComponent(query)}`);
     const listings = await res.json();
 
     if(listings.length === 0){
@@ -34,9 +33,8 @@ async function performSearch() {
       return;
     }
 
-    // Show search results
     searchResultsDiv.innerHTML = listings.map(l => `
-      <a href="/listings/${l._id}" class="listing-link" data-category="${l.category || ''}">
+      <a href="/listings/${l._id}" class="listing-link">
         <div class="card listing-card">
           <img src="${l.image?.url || 'default.jpg'}" class="card-img-top" style="height:20rem;">
           <div class="card-body">

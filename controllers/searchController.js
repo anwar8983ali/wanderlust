@@ -1,23 +1,24 @@
 const Listing = require('../models/listing');
 
-module.exports.searchListings = async (req, res) => {
-  try {
-    const query = req.query.query || '';
-    if(!query) return res.json([]);
+module.exports.index = async (req, res) => {
+  const allListings = await Listing.find({});
+  res.render('allListings', { allListings, currUser: req.user });
+};
 
-    // Search in title, location, country (case-insensitive)
-    const regex = new RegExp(query, 'i'); 
-    const listings = await Listing.find({
-      $or: [
-        { title: regex },
-        { location: regex },
-        { country: regex }
-      ]
-    });
+module.exports.search = async (req, res) => {
+  const { query } = req.query;
 
-    res.json(listings); // return JSON for navbar.js
-  } catch(err) {
-    console.error(err);
-    res.status(500).json({ error: 'Server error' });
-  }
+  if(!query) return res.json([]); // empty query returns empty array
+
+  // Case-insensitive search on title, description, location, country
+  const listings = await Listing.find({
+    $or: [
+      { title: { $regex: query, $options: 'i' } },
+      { description: { $regex: query, $options: 'i' } },
+      { location: { $regex: query, $options: 'i' } },
+      { country: { $regex: query, $options: 'i' } }
+    ]
+  });
+
+  res.json(listings);
 };
