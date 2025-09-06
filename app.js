@@ -21,6 +21,7 @@ const userRouter=require("./routes/user.js");
 const searchRoutes = require('./routes/search');
 app.use('/search', searchRoutes);
 const axios = require("axios");
+app.use(bodyParser.json());
 
 // const MONGO_URL = "mongodb://127.0.0.1:27017/wanderlust";
 const dburl=process.env.ATLASDB_URL;
@@ -134,35 +135,34 @@ app.get("/search", async (req, res) => {
 
 //chatbot
 
-app.post("/chatbot", async (req, res) => {
+// Chatbot Route
+app.post("/chat", async (req, res) => {
   try {
-    const { message } = req.body;
+    const userMessage = req.body.message;
 
-    const response = await axios.post(
+    const response = await fetch(
       "https://api-inference.huggingface.co/models/facebook/blenderbot-400M-distill",
-      { inputs: message },
       {
+        method: "POST",
         headers: {
-          Authorization: `Bearer ${process.env.HF_API_KEY}`,
+          Authorization: `Bearer ${process.env.HF_TOKEN}`,
+          "Content-Type": "application/json",
         },
+        body: JSON.stringify({ inputs: userMessage }),
       }
     );
 
-    console.log("HuggingFace Response:", response.data); // 👈 log whole response
+    const data = await response.json();
 
-    const botReply =
-      Array.isArray(response.data) && response.data[0]?.generated_text
-        ? response.data[0].generated_text
-        : response.data.generated_text || "Sorry, I couldn't understand that.";
+    // Fix undefined issue
+    const botReply = data[0]?.generated_text || "I’m not sure how to reply.";
 
     res.json({ reply: botReply });
-  } catch (err) {
-    console.error(err.response?.data || err.message);
-    res.status(500).json({ error: "Something went wrong!" });
+  } catch (error) {
+    console.error("Chatbot error:", error);
+    res.json({ reply: "Error connecting to chatbot." });
   }
 });
-
-
 
 
 
