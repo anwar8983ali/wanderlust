@@ -134,34 +134,6 @@ app.get("/search", async (req, res) => {
 });
 
 
-// Initialize Gemini client
-// const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-// const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-
-// Chat route
-// Chat route
-// app.post("/chat", async (req, res) => {
-//   try {
-//     const { message } = req.body;
-//     console.log("📩 Incoming message:", message);
-
-//     if (!message) {
-//       return res.status(400).json({ error: "Message is required" });
-//     }
-
-//     const result = await model.generateContent(message);
-
-//     console.log("📨 Gemini raw response:", JSON.stringify(result, null, 2));
-
-//     const reply = result.response.text() || "⚠️ No reply found in Gemini response";
-
-//     res.json({ reply });
-//   } catch (err) {
-//     console.error("❌ Gemini API Error:", err);
-//     res.status(500).json({ error: err.message || "Gemini request failed" });
-//   }
-// });
-
 
 // 404 Route - Fixed version
 app.all("*", (req, res, next) => {
