@@ -76,40 +76,112 @@
   <script src="/js/script.js"></script>
   <script src="/js/navbar.js"></script>
 
-  <div id="chatbot">
-  <div id="chat-window">
-    <div id="chat-messages"></div>
+<!-- Floating Chatbot -->
+<div id="chatbot-btn">💬</div>
+
+<div id="chatbot-box">
+  <div id="chat-header">Wanderlust Assistant ✨</div>
+  <div id="chat-messages"></div>
+  <div id="chat-input-area">
     <input type="text" id="chat-input" placeholder="Ask me anything..." />
     <button id="send-btn">Send</button>
   </div>
 </div>
 
 <style>
-#chatbot {
+/* Floating button */
+#chatbot-btn {
   position: fixed;
   bottom: 20px;
   right: 20px;
+  background: #fe424d;
+  color: white;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  cursor: pointer;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+  z-index: 1000;
+}
+
+/* Chatbox */
+#chatbot-box {
+  position: fixed;
+  bottom: 90px;
+  right: 20px;
   width: 300px;
+  height: 400px;
   background: white;
   border: 1px solid #ccc;
   border-radius: 10px;
-  box-shadow: 0px 2px 10px rgba(0,0,0,0.2);
+  box-shadow: 0px 4px 15px rgba(0,0,0,0.2);
+  display: none;
+  flex-direction: column;
+  z-index: 1000;
 }
-#chat-window { padding: 10px; }
-#chat-messages { height: 200px; overflow-y: auto; margin-bottom: 10px; }
-#chat-input { width: 70%; padding: 5px; }
-#send-btn { width: 25%; padding: 5px; background: #fe424d; color: white; border: none; border-radius: 5px; }
+
+#chat-header {
+  background: #fe424d;
+  color: white;
+  padding: 10px;
+  border-top-left-radius: 10px;
+  border-top-right-radius: 10px;
+  text-align: center;
+  font-weight: bold;
+}
+
+#chat-messages {
+  flex: 1;
+  padding: 10px;
+  overflow-y: auto;
+  font-size: 14px;
+}
+
+#chat-input-area {
+  display: flex;
+  border-top: 1px solid #ddd;
+}
+
+#chat-input {
+  flex: 1;
+  padding: 8px;
+  border: none;
+  outline: none;
+}
+
+#send-btn {
+  background: #fe424d;
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  cursor: pointer;
+}
 </style>
 
 <script>
-document.getElementById("send-btn").addEventListener("click", async () => {
-  const input = document.getElementById("chat-input");
+const chatBtn = document.getElementById("chatbot-btn");
+const chatBox = document.getElementById("chatbot-box");
+const messagesDiv = document.getElementById("chat-messages");
+const sendBtn = document.getElementById("send-btn");
+const input = document.getElementById("chat-input");
+
+// Toggle chatbot
+chatBtn.addEventListener("click", () => {
+  chatBox.style.display = chatBox.style.display === "flex" ? "none" : "flex";
+});
+
+// Send message
+sendBtn.addEventListener("click", async () => {
   const message = input.value.trim();
   if (!message) return;
 
-  const messagesDiv = document.getElementById("chat-messages");
   messagesDiv.innerHTML += `<p><b>You:</b> ${message}</p>`;
   input.value = "";
+  messagesDiv.scrollTop = messagesDiv.scrollHeight;
 
   const res = await fetch("/chatbot", {
     method: "POST",
