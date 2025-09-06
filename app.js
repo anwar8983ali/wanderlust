@@ -148,12 +148,19 @@ app.post("/chatbot", async (req, res) => {
       }
     );
 
-    res.json({ reply: response.data[0].generated_text });
+    // ✅ Safe check
+    const botReply =
+      response.data && response.data[0] && response.data[0].generated_text
+        ? response.data[0].generated_text
+        : "Sorry, I couldn't understand that.";
+
+    res.json({ reply: botReply });
   } catch (err) {
-    console.error(err);
+    console.error(err.response?.data || err.message);
     res.status(500).json({ error: "Something went wrong!" });
   }
 });
+
 
 
 
