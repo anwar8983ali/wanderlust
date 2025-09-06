@@ -1,6 +1,7 @@
 if(process.env.NODE_ENV!="production"){
   require('dotenv').config()
 }
+const axios = require("axios");
 const express = require("express");
 const app = express();
 const mongoose = require("mongoose");
@@ -20,7 +21,6 @@ const reviewRouter=require("./routes/review.js");
 const userRouter=require("./routes/user.js");
 const searchRoutes = require('./routes/search');
 app.use('/search', searchRoutes);
-const axios = require("axios");
 
 // const MONGO_URL = "mongodb://127.0.0.1:27017/wanderlust";
 const dburl=process.env.ATLASDB_URL;
@@ -133,43 +133,48 @@ app.get("/search", async (req, res) => {
 });
 
 
-//chatbot
-
+// Chatbot page
 app.get("/chatbot", (req, res) => {
-  res.render("chatbot");
+  res.render("chatbot");   // chatbot.ejs or chatbot.html
 });
 
-
-// Chatbot Route
+// Chatbot API
+// Chatbot API
 app.post("/chat", async (req, res) => {
   try {
     const userMessage = req.body.message;
-    console.log("User message:", userMessage); // 👈 Add this
+    console.log("User message:", userMessage);
 
-    const response = await fetch(
+    const response = await axios.post(
       "https://api-inference.huggingface.co/models/facebook/blenderbot-400M-distill",
+      { inputs: userMessage },
       {
-        method: "POST",
         headers: {
-          Authorization: `Bearer ${process.env.HF_TOKEN}`,
+          Authorization: `Bearer ${process.env.HF_API_KEY}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ inputs: userMessage }),
       }
     );
 
-    const data = await response.json();
-    console.log("HuggingFace raw response:", data); // 👈 Add this
+    const data = response.data;
+    console.log("HuggingFace raw response:", data);
 
-    const botReply = data[0]?.generated_text || "I’m not sure how to reply.";
+    // HuggingFace may return an array or object
+    let botReply;
+    if (Array.isArray(data) && data[0]?.generated_text) {
+      botReply = data[0].generated_text;
+    } else if (data.generated_text) {
+      botReply = data.generated_text;
+    } else {
+      botReply = "I’m not sure how to reply.";
+    }
+
     res.json({ reply: botReply });
   } catch (error) {
-    console.error("Chatbot error:", error);
+    console.error("Chatbot error:", error.response?.data || error.message);
     res.json({ reply: "Error connecting to chatbot." });
   }
 });
-
-
 
 
 
