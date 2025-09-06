@@ -42,6 +42,8 @@
     crossorigin=""
   />
 </head>
+
+
 <body>
   <!-- Navbar -->
   <%- include("../includes/navbar.ejs") %>
@@ -73,6 +75,55 @@
   <!-- Custom JS -->
   <script src="/js/script.js"></script>
   <script src="/js/navbar.js"></script>
+
+  <div id="chatbot">
+  <div id="chat-window">
+    <div id="chat-messages"></div>
+    <input type="text" id="chat-input" placeholder="Ask me anything..." />
+    <button id="send-btn">Send</button>
+  </div>
+</div>
+
+<style>
+#chatbot {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 300px;
+  background: white;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  box-shadow: 0px 2px 10px rgba(0,0,0,0.2);
+}
+#chat-window { padding: 10px; }
+#chat-messages { height: 200px; overflow-y: auto; margin-bottom: 10px; }
+#chat-input { width: 70%; padding: 5px; }
+#send-btn { width: 25%; padding: 5px; background: #fe424d; color: white; border: none; border-radius: 5px; }
+</style>
+
+<script>
+document.getElementById("send-btn").addEventListener("click", async () => {
+  const input = document.getElementById("chat-input");
+  const message = input.value.trim();
+  if (!message) return;
+
+  const messagesDiv = document.getElementById("chat-messages");
+  messagesDiv.innerHTML += `<p><b>You:</b> ${message}</p>`;
+  input.value = "";
+
+  const res = await fetch("/chatbot", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ message }),
+  });
+
+  const data = await res.json();
+  messagesDiv.innerHTML += `<p><b>Bot:</b> ${data.reply}</p>`;
+  messagesDiv.scrollTop = messagesDiv.scrollHeight;
+});
+</script>
+
+
 </body>
 </html>
 

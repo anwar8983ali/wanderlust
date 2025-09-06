@@ -20,6 +20,7 @@ const reviewRouter=require("./routes/review.js");
 const userRouter=require("./routes/user.js");
 const searchRoutes = require('./routes/search');
 app.use('/search', searchRoutes);
+const axios = require("axios");
 
 // const MONGO_URL = "mongodb://127.0.0.1:27017/wanderlust";
 const dburl=process.env.ATLASDB_URL;
@@ -107,6 +108,8 @@ app.use("/listings/:id/reviews",reviewRouter);
 app.use("/",userRouter);
 const Listing = require("./models/listing"); // your MongoDB model
 
+//search
+
 app.get("/search", async (req, res) => {
   const query = req.query.q?.trim(); // trim extra spaces
 
@@ -126,6 +129,30 @@ app.get("/search", async (req, res) => {
 
   // Render only matching listings
   res.render("search/searchResults", { listings, query });
+});
+
+
+//chatbot
+
+app.post("/chatbot", async (req, res) => {
+  try {
+    const { message } = req.body;
+
+    const response = await axios.post(
+      "https://api-inference.huggingface.co/models/facebook/blenderbot-400M-distill",
+      { inputs: message },
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.HF_API_KEY}`,
+        },
+      }
+    );
+
+    res.json({ reply: response.data[0].generated_text });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Something went wrong!" });
+  }
 });
 
 
