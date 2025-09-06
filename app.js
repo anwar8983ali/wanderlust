@@ -21,6 +21,7 @@ const reviewRouter=require("./routes/review.js");
 const userRouter=require("./routes/user.js");
 const searchRoutes = require('./routes/search');
 app.use('/search', searchRoutes);
+const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 // const MONGO_URL = "mongodb://127.0.0.1:27017/wanderlust";
 const dburl=process.env.ATLASDB_URL;
@@ -133,46 +134,33 @@ app.get("/search", async (req, res) => {
 });
 
 
-// Chatbot page
-app.get("/chatbot", (req, res) => {
-  res.render("chatbot");   // chatbot.ejs or chatbot.html
-});
+// Initialize Gemini client
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-// Chatbot API
-// Chatbot API
+// Chat route
 app.post("/chat", async (req, res) => {
+  const { message } = req.body;
+
+  // Check for missing input
+  if (!message) {
+    return res.status(400).json({ error: "Message is required." });
+  }
+
+  // Check for missing API key
+  if (!process.env.GEMINI_API_KEY) {
+    return res.status(500).json({ error: "Gemini API key is missing in .env" });
+  }
+
   try {
-    const userMessage = req.body.message;
-    console.log("User message:", userMessage);
+    const result = await model.generateContent(message);
+    const response = await result.response;
+    const text = response.text();
 
-    const response = await axios.post(
-      "https://api-inference.huggingface.co/models/facebook/blenderbot-400M-distill",
-      { inputs: userMessage },
-      {
-        headers: {
-          Authorization: `Bearer ${process.env.HF_API_KEY}`,
-          "Content-Type": "application/json",
-        },
-      }
-    );
-
-    const data = response.data;
-    console.log("HuggingFace raw response:", data);
-
-    // HuggingFace may return an array or object
-    let botReply;
-    if (Array.isArray(data) && data[0]?.generated_text) {
-      botReply = data[0].generated_text;
-    } else if (data.generated_text) {
-      botReply = data.generated_text;
-    } else {
-      botReply = "I’m not sure how to reply.";
-    }
-
-    res.json({ reply: botReply });
-  } catch (error) {
-    console.error("Chatbot error:", error.response?.data || error.message);
-    res.json({ reply: "Error connecting to chatbot." });
+    res.json({ reply: text });
+  } catch (err) {
+    console.error("❌ Gemini API Error:", err.message);
+    res.status(500).json({ error: "Failed to get response from Gemini API." });
   }
 });
 
