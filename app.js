@@ -143,13 +143,14 @@ app.get("/chatbot", (req, res) => {
 app.post("/chat", async (req, res) => {
   try {
     const userMessage = req.body.message;
+    console.log("User message:", userMessage); // 👈 Add this
 
     const response = await fetch(
       "https://api-inference.huggingface.co/models/facebook/blenderbot-400M-distill",
       {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${process.env.HF_API_KEY}`,
+          Authorization: `Bearer ${process.env.HF_TOKEN}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ inputs: userMessage }),
@@ -157,10 +158,9 @@ app.post("/chat", async (req, res) => {
     );
 
     const data = await response.json();
+    console.log("HuggingFace raw response:", data); // 👈 Add this
 
-    // Fix undefined issue
     const botReply = data[0]?.generated_text || "I’m not sure how to reply.";
-
     res.json({ reply: botReply });
   } catch (error) {
     console.error("Chatbot error:", error);

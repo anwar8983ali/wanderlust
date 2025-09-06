@@ -1,24 +1,30 @@
 async function sendMessage() {
   const input = document.getElementById("userInput");
-  const chat = document.getElementById("chat");
+  const message = input.value.trim();
 
-  const userMessage = input.value.trim();
-  if (!userMessage) return;
+  if (!message) return;
 
-  // Show user message
-  chat.innerHTML += `<p><strong>You:</strong> ${userMessage}</p>`;
-  input.value = "";
+  const chatDiv = document.getElementById("chat");
+  chatDiv.innerHTML += `<p><b>You:</b> ${message}</p>`;
 
   try {
-    const res = await fetch("/chatbot", {
+    const res = await fetch("/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message: userMessage }),
+      body: JSON.stringify({ message })
     });
 
+    console.log("Fetch status:", res.status); // 👈 Add this
+
     const data = await res.json();
-    chat.innerHTML += `<p><strong>Bot:</strong> ${data.reply}</p>`;
+    console.log("Bot response JSON:", data); // 👈 Add this
+
+    chatDiv.innerHTML += `<p><b>Bot:</b> ${data.reply}</p>`;
   } catch (err) {
-    chat.innerHTML += `<p><strong>Bot:</strong> Error connecting to server.</p>`;
+    console.error("Frontend error:", err);
+    chatDiv.innerHTML += `<p><b>Bot:</b> Error connecting to server</p>`;
   }
+
+  input.value = "";
+  chatDiv.scrollTop = chatDiv.scrollHeight;
 }
