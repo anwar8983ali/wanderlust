@@ -140,29 +140,27 @@ const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
 // Chat route
 app.post("/chat", async (req, res) => {
-  const { message } = req.body;
-
-  // Check for missing input
-  if (!message) {
-    return res.status(400).json({ error: "Message is required." });
-  }
-
-  // Check for missing API key
-  if (!process.env.GEMINI_API_KEY) {
-    return res.status(500).json({ error: "Gemini API key is missing in .env" });
-  }
-
   try {
-    const result = await model.generateContent(message);
-    const response = await result.response;
-    const text = response.text();
+    const { message } = req.body;
+    if (!message) {
+      return res.status(400).json({ error: "Message is required." });
+    }
 
-    res.json({ reply: text });
+    // Gemini API call
+    const result = await chatSession.sendMessage(message);
+
+    // Make sure we safely extract text
+    const reply =
+      result?.response?.candidates?.[0]?.content?.parts?.[0]?.text ||
+      "Sorry, I didn’t understand that.";
+
+    res.json({ reply });
   } catch (err) {
-    console.error("❌ Gemini API Error:", err.message);
+    console.error("❌ Gemini API Error:", err); // log full error
     res.status(500).json({ error: "Failed to get response from Gemini API." });
   }
 });
+
 
 
 
