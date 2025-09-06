@@ -21,7 +21,6 @@ const userRouter=require("./routes/user.js");
 const searchRoutes = require('./routes/search');
 app.use('/search', searchRoutes);
 const axios = require("axios");
-app.use(bodyParser.json());
 
 // const MONGO_URL = "mongodb://127.0.0.1:27017/wanderlust";
 const dburl=process.env.ATLASDB_URL;
