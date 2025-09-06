@@ -134,6 +134,11 @@ app.get("/search", async (req, res) => {
 
 //chatbot
 
+app.get("/chatbot", (req, res) => {
+  res.render("chatbot");
+});
+
+
 // Chatbot Route
 app.post("/chat", async (req, res) => {
   try {

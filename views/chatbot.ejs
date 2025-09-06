@@ -1,0 +1,15 @@
+<% layout('layouts/boilerPlate') %>
+
+<div style="max-width: 600px; margin: 2rem auto; padding: 1rem; border: 1px solid #ddd; border-radius: 10px;">
+  <h3>Wanderlust Chatbot 🤖</h3>
+
+  <div id="chat" style="height: 300px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; margin-bottom: 1rem;"></div>
+
+  <div style="display: flex;">
+    <input id="userInput" type="text" placeholder="Ask me anything..." style="flex: 1; padding: 0.5rem;"/>
+    <button onclick="sendMessage()" style="margin-left: 0.5rem;">Send</button>
+  </div>
+</div>
+
+<!-- Link chatbot.js from /public/js -->
+<script src="/js/chatbot.js"></script>
