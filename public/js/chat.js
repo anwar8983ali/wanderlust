@@ -17,13 +17,17 @@ async function sendMessage() {
     });
 
     const data = await res.json();
+
     if (data.reply) {
       addMessage("Gemini", data.reply, "bot");
+    } else if (data.error) {
+      // show backend error
+      addMessage("Error", data.error, "bot");
     } else {
       addMessage("Error", "No response from server", "bot");
     }
   } catch (err) {
-    addMessage("Error", "Failed to connect to server", "bot");
+    addMessage("Error", `Failed to connect: ${err.message}`, "bot");
   }
 }
 

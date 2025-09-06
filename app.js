@@ -142,25 +142,22 @@ const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 app.post("/chat", async (req, res) => {
   try {
     const { message } = req.body;
-    if (!message) {
-      return res.status(400).json({ error: "Message is required." });
-    }
+    console.log("📩 Incoming message:", message);
 
-    // Gemini API call
     const result = await chatSession.sendMessage(message);
 
-    // Make sure we safely extract text
+    console.log("📨 Gemini raw response:", JSON.stringify(result, null, 2));
+
     const reply =
       result?.response?.candidates?.[0]?.content?.parts?.[0]?.text ||
-      "Sorry, I didn’t understand that.";
+      "⚠️ No reply found in Gemini response";
 
     res.json({ reply });
   } catch (err) {
-    console.error("❌ Gemini API Error:", err); // log full error
-    res.status(500).json({ error: "Failed to get response from Gemini API." });
+    console.error("❌ Gemini API Error:", err);
+    res.status(500).json({ error: err.message || "Gemini request failed" });
   }
 });
-
 
 
 
