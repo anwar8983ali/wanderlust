@@ -148,11 +148,12 @@ app.post("/chatbot", async (req, res) => {
       }
     );
 
-    // ✅ Safe check
+    console.log("HuggingFace Response:", response.data); // 👈 log whole response
+
     const botReply =
-      response.data && response.data[0] && response.data[0].generated_text
+      Array.isArray(response.data) && response.data[0]?.generated_text
         ? response.data[0].generated_text
-        : "Sorry, I couldn't understand that.";
+        : response.data.generated_text || "Sorry, I couldn't understand that.";
 
     res.json({ reply: botReply });
   } catch (err) {
@@ -160,6 +161,7 @@ app.post("/chatbot", async (req, res) => {
     res.status(500).json({ error: "Something went wrong!" });
   }
 });
+
 
 
 
