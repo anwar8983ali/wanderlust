@@ -5,19 +5,28 @@ const axios = require("axios");
 async function geocodeLocation(location, country) {
   try {
     const query = `${location}, ${country}`;
-    const response = await axios.get("https://nominatim.openstreetmap.org/search", {
-      params: { q: query, format: "json", limit: 1 },
-      headers: { "User-Agent": "WanderlustApp/1.0" }
+    console.log("🔍 Geocoding query:", query);
+
+    const response = await axios.get("https://us1.locationiq.com/v1/search", {
+      params: {
+        key: process.env.LOCATIONIQ_KEY,
+        q: query,
+        format: "json",
+        limit: 1
+      }
     });
+
+    console.log("📍 LocationIQ response:", JSON.stringify(response.data));
 
     if (response.data && response.data.length > 0) {
       const { lat, lon } = response.data[0];
       return [parseFloat(lon), parseFloat(lat)];
     }
-    return [77.2090, 28.6139]; // fallback: New Delhi, if location not found
+    console.log("⚠️ No results found for:", query);
+    return null;
   } catch (err) {
-    console.log("Geocoding error:", err.message);
-    return [77.2090, 28.6139];
+    console.log("❌ Geocoding error:", err.message);
+    return null;
   }
 }
 
@@ -48,7 +57,9 @@ module.exports.createListing=async (req, res, next) => {
     newListing.image={url,filename};
 
     const coordinates = await geocodeLocation(req.body.listing.location, req.body.listing.country);
-    newListing.geometry = { type: "Point", coordinates };
+    if (coordinates) {
+      newListing.geometry = { type: "Point", coordinates };
+    }
 
     await newListing.save();
     req.flash("success","New listing created");
@@ -72,7 +83,9 @@ module.exports.updateListing=async (req, res) => {
   let listingData = { ...req.body.listing };
 
   const coordinates = await geocodeLocation(listingData.location, listingData.country);
-  listingData.geometry = { type: "Point", coordinates };
+  if (coordinates) {
+    listingData.geometry = { type: "Point", coordinates };
+  }
 
   let listing = await Listing.findByIdAndUpdate(id, listingData);
   if(typeof req.file!="undefined"){
