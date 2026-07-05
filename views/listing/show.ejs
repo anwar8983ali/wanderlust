@@ -29,6 +29,10 @@
               <span class="fw-bold">Location:</span>
               <span><%= listing.location %>, <%= listing.country %></span>
             </div>
+            <div>
+              <span class="fw-bold">Spots available:</span>
+              <span><%= listing.totalSpots || 1 %></span>
+            </div>
           </div>
         </div>
       </div>
@@ -44,6 +48,36 @@
       </div>
     </div>
   <% } %>
+
+  <!-- Booking Section -->
+  <div class="row justify-content-center mt-4">
+    <div class="col-md-6">
+      <div class="card shadow-sm p-3">
+        <h5 class="mb-3"><i class="fas fa-calendar-check me-2"></i>Book this stay</h5>
+        <% if (currUser) { %>
+          <form action="/listings/<%= listing._id %>/book" method="POST">
+            <div class="mb-3">
+              <label class="form-label">Check-in / Check-out</label>
+              <input type="text" id="dateRange" class="form-control" placeholder="Select dates" required readonly>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Number of spots</label>
+              <input type="number" name="spotsBooked" id="spotsBooked" class="form-control" min="1" max="<%= listing.totalSpots || 1 %>" value="1" required>
+              <small class="text-muted"><%= listing.totalSpots || 1 %> total spot(s) at this listing</small>
+            </div>
+            <input type="hidden" name="checkIn" id="checkInInput">
+            <input type="hidden" name="checkOut" id="checkOutInput">
+            <div class="mb-3" id="priceSummary" style="display:none;">
+              <p class="mb-0"><span id="nightsCount"></span> nights &times; &#8377;<%= listing.price %> &times; <span id="spotsCount"></span> spot(s) = <strong>&#8377;<span id="totalPrice"></span></strong></p>
+            </div>
+            <button type="submit" class="btn btn-dark" id="bookBtn" disabled>Reserve</button>
+          </form>
+        <% } else { %>
+          <p class="mb-0">Please <a href="/login">log in</a> to book this stay.</p>
+        <% } %>
+      </div>
+    </div>
+  </div>
 
   <!-- Owner Actions -->
   <% if(currUser && listing.owner._id.equals(currUser._id)) { %>
@@ -224,7 +258,6 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-  // Highlight stars on hover and click
   const stars = document.querySelectorAll('.star-rating label');
   const radioInputs = document.querySelectorAll('.star-rating input[type="radio"]');
   
@@ -274,7 +307,6 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
   
-  // Initialize with any pre-selected rating
   const initialChecked = document.querySelector('.star-rating input:checked');
   if (initialChecked) {
     highlightStars(parseInt(initialChecked.value));
@@ -288,7 +320,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <script>
   <% if (listing.geometry && listing.geometry.coordinates) { %>
-    const coordinates = <%- JSON.stringify(listing.geometry.coordinates) %>; // [lng, lat]
+    const coordinates = <%- JSON.stringify(listing.geometry.coordinates) %>;
     const map = L.map('map').setView([coordinates[1], coordinates[0]], 10);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -299,5 +331,69 @@ document.addEventListener('DOMContentLoaded', function() {
       .addTo(map)
       .bindPopup("<b><%= listing.title %></b>")
       .openPopup();
+  <% } %>
+</script>
+
+<!-- Flatpickr for booking date range -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/flatpickr.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/flatpickr/4.6.13/flatpickr.min.js"></script>
+
+<script>
+  <% if (currUser) { %>
+  const totalSpotsAtListing = <%= listing.totalSpots || 1 %>;
+  const pricePerNight = <%= listing.price %>;
+
+  fetch('/listings/<%= listing._id %>/booked-dates')
+    .then(res => res.json())
+    .then(data => {
+      const bookings = data.bookings || [];
+
+      function isDateFullyBooked(date) {
+        let spotsUsed = 0;
+        bookings.forEach(b => {
+          const checkIn = new Date(b.checkIn);
+          const checkOut = new Date(b.checkOut);
+          if (date >= checkIn && date < checkOut) {
+            spotsUsed += b.spotsBooked;
+          }
+        });
+        return spotsUsed >= totalSpotsAtListing;
+      }
+
+      flatpickr("#dateRange", {
+        mode: "range",
+        minDate: "today",
+        disable: [isDateFullyBooked],
+        onChange: function(selectedDates) {
+          if (selectedDates.length === 2) {
+            updatePriceSummary(selectedDates[0], selectedDates[1]);
+          }
+        }
+      });
+
+      function updatePriceSummary(checkIn, checkOut) {
+        const nights = Math.round((checkOut - checkIn) / (1000 * 60 * 60 * 24));
+        const spots = parseInt(document.getElementById('spotsBooked').value) || 1;
+        const total = nights * pricePerNight * spots;
+
+        document.getElementById('checkInInput').value = checkIn.toISOString();
+        document.getElementById('checkOutInput').value = checkOut.toISOString();
+        document.getElementById('nightsCount').innerText = nights;
+        document.getElementById('spotsCount').innerText = spots;
+        document.getElementById('totalPrice').innerText = total.toLocaleString('en-IN');
+        document.getElementById('priceSummary').style.display = 'block';
+        document.getElementById('bookBtn').disabled = false;
+      }
+
+      document.getElementById('spotsBooked').addEventListener('input', () => {
+        const nightsEl = document.getElementById('nightsCount');
+        if (nightsEl.innerText) {
+          const nights = parseInt(nightsEl.innerText);
+          const spots = parseInt(document.getElementById('spotsBooked').value) || 1;
+          document.getElementById('spotsCount').innerText = spots;
+          document.getElementById('totalPrice').innerText = (nights * pricePerNight * spots).toLocaleString('en-IN');
+        }
+      });
+    });
   <% } %>
 </script>

@@ -15,9 +15,6 @@
         <textarea name="listing[description]" class="form-control" required>
 <%= listing.description %></textarea
       >
-      <div id="validationServerUsernameFeedback" class="invalid-feedback">
-        Please enter valid desciption.
-      </div>
        </div>
        <div class="mb-3">
           Oroginal Image:<br>
@@ -31,21 +28,20 @@
         <div class="mb-3 col-md-4">
         <label for="price" class="form-label">Price:</label>
          <input name="listing[price]" value="<%= listing.price %>"  class="form-control" required/>
-         <div id="validationServerUsernameFeedback" class="invalid-feedback">
-        Please enter valid price.
-      </div>
        </div>
 
-       <div class="mb-3 col-md-8">
+       <div class="mb-3 col-md-4">
+        <label for="totalSpots" class="form-label">Available spots:</label>
+        <input name="listing[totalSpots]" type="number" min="1" value="<%= listing.totalSpots || 1 %>" class="form-control" required/>
+       </div>
+
+       <div class="mb-3 col-md-4">
          <label for="country" class="form-label">Country:</label>
         <input
         name="listing[country]"
         value="<%= listing.country %>" class="form-control"
         type="text" required
       />
-      <div id="validationServerUsernameFeedback" class="invalid-feedback">
-        Please enter valid country name.
-      </div>
        </div>
        </div>
         <div class="mb-3">
@@ -56,9 +52,6 @@
         type="text" class="form-control" required
         autocomplete="off"
       />
-      <div id="validationServerUsernameFeedback" class="invalid-feedback">
-        Please enter valid location.
-      </div>
         </div>
       <button class="btn btn-dark edit-btn mt-3">Edit</button>
     </form>

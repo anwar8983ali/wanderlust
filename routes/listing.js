@@ -23,6 +23,8 @@ router.route("/")
 // New Route
 router.get("/new", isLoggedIn, listingController.renderNewForm);
 
+router.get("/near-me", wrapAsync(listingController.nearMe));
+
 // Show, Update, Delete routes using route()
 router.route("/:id")
     .get(wrapAsync(listingController.showListing))

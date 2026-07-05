@@ -18,9 +18,6 @@
         name="listing[description]"
         placeholder="enter description" class="form-control" 
       ></textarea>
-      <!-- <div id="validationServerUsernameFeedback" class="invalid-feedback">
-        Please enter valid desciption.
-      </div> -->
       </div >
 
       <div class="mb-3">
@@ -43,7 +40,12 @@
       </div>
       </div>
 
-      <div class="mb-3 col-md-8">
+      <div class="mb-3 col-md-4">
+        <label for="totalSpots" class="form-label">Available spots:</label>
+        <input name="listing[totalSpots]" type="number" min="1" value="1" placeholder="1" class="form-control" required/>
+      </div>
+
+      <div class="mb-3 col-md-4">
         <label for="country" class="form-label">Country:</label>
         <input name="listing[country]" placeholder="India" type="text" class="form-control" required/>
         <div id="validationServerUsernameFeedback" class="invalid-feedback">

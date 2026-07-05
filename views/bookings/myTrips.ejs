@@ -1,0 +1,34 @@
+<% layout('layouts/boilerPlate') %>
+<div class="container mt-4">
+  <h3>My Trips</h3>
+  <% if (bookings.length === 0) { %>
+    <div class="alert alert-info mt-3">You have no trips booked yet. <a href="/listings">Explore listings</a></div>
+  <% } else { %>
+    <div class="row g-4 mt-2">
+      <% bookings.forEach(booking => { %>
+        <div class="col-md-6">
+          <div class="card shadow-sm">
+            <% if (booking.listing && booking.listing.image) { %>
+              <img src="<%= booking.listing.image.url %>" class="card-img-top" style="height:200px;object-fit:cover;">
+            <% } %>
+            <div class="card-body">
+              <h5><%= booking.listing ? booking.listing.title : "Listing removed" %></h5>
+              <p class="mb-2">
+                <%= booking.checkIn.toDateString() %> &rarr; <%= booking.checkOut.toDateString() %><br>
+                <%= booking.totalNights %> nights &middot; &#8377;<%= booking.totalPrice.toLocaleString("en-IN") %>
+              </p>
+              <span class="badge bg-<%= booking.status === 'confirmed' ? 'success' : 'secondary' %> mb-2">
+                <%= booking.status %>
+              </span>
+              <% if (booking.status === 'confirmed') { %>
+                <form action="/bookings/<%= booking._id %>/cancel" method="POST">
+                  <button class="btn btn-sm btn-outline-danger">Cancel booking</button>
+                </form>
+              <% } %>
+            </div>
+          </div>
+        </div>
+      <% }) %>
+    </div>
+  <% } %>
+</div>

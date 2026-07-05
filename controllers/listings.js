@@ -105,3 +105,32 @@ module.exports.deleteListing=async (req, res) => {
   req.flash("success","listing deleted");
   res.redirect("/listings");
 };
+
+module.exports.nearMe = async (req, res) => {
+  const { lat, lng, radius } = req.query;
+
+  if (!lat || !lng) {
+    req.flash("error", "Location access is needed for this feature");
+    return res.redirect("/listings");
+  }
+
+  const geoNearStage = {
+    near: { type: "Point", coordinates: [parseFloat(lng), parseFloat(lat)] },
+    distanceField: "distance",
+    spherical: true,
+    query: { "geometry.coordinates": { $ne: [0, 0] } }
+  };
+
+  // Only limit distance if the user actually picked a radius
+  if (radius) {
+    geoNearStage.maxDistance = parseFloat(radius) * 1000;
+  }
+
+  const listings = await Listing.aggregate([{ $geoNear: geoNearStage }]);
+
+  listings.forEach(listing => {
+    listing.distanceKm = (listing.distance / 1000).toFixed(1);
+  });
+
+  res.render("listing/index.ejs", { allListings: listings, isNearMe: true, radius: radius || null });
+};
