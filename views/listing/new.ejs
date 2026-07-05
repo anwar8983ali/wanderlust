@@ -57,6 +57,7 @@
         name="listing[location]"
         placeholder="jaypur Rajasthan"
         type="text" class="form-control" required
+        autocomplete="off"
       />
       <div id="validationServerUsernameFeedback" class="invalid-feedback">
         Please enter valid location.
@@ -69,3 +70,85 @@
     </form>
     </div>
     </div>
+
+<style>
+  .autocomplete-wrapper { position: relative; }
+  .autocomplete-list {
+    position: absolute;
+    z-index: 1000;
+    background: white;
+    border: 1px solid #ccc;
+    width: 100%;
+    max-height: 200px;
+    overflow-y: auto;
+    border-radius: 4px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  }
+  .autocomplete-item {
+    padding: 8px 12px;
+    cursor: pointer;
+  }
+  .autocomplete-item:hover {
+    background: #f0f0f0;
+  }
+</style>
+
+<script>
+  const locationInput = document.querySelector('input[name="listing[location]"]');
+  const countryInput = document.querySelector('input[name="listing[country]"]');
+
+  const wrapper = document.createElement('div');
+  wrapper.className = 'autocomplete-wrapper';
+  locationInput.parentNode.insertBefore(wrapper, locationInput);
+  wrapper.appendChild(locationInput);
+
+  const dropdown = document.createElement('div');
+  dropdown.className = 'autocomplete-list';
+  dropdown.style.display = 'none';
+  wrapper.appendChild(dropdown);
+
+  let debounceTimer;
+  locationInput.addEventListener('input', () => {
+    clearTimeout(debounceTimer);
+    const query = locationInput.value.trim();
+    if (query.length < 2) {
+      dropdown.style.display = 'none';
+      return;
+    }
+    debounceTimer = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/autocomplete?q=${encodeURIComponent(query)}`);
+        const results = await res.json();
+        renderDropdown(results);
+      } catch (err) {
+        console.log("Autocomplete fetch failed", err);
+      }
+    }, 400);
+  });
+
+  function renderDropdown(results) {
+    dropdown.innerHTML = '';
+    if (!results || results.length === 0) {
+      dropdown.style.display = 'none';
+      return;
+    }
+    results.forEach(place => {
+      const item = document.createElement('div');
+      item.className = 'autocomplete-item';
+      item.textContent = place.display_name;
+      item.addEventListener('click', () => {
+        locationInput.value = (place.address && place.address.name) || place.display_name.split(',')[0];
+        countryInput.value = (place.address && place.address.country) || '';
+        dropdown.style.display = 'none';
+      });
+      dropdown.appendChild(item);
+    });
+    dropdown.style.display = 'block';
+  }
+
+  document.addEventListener('click', (e) => {
+    if (!wrapper.contains(e.target)) {
+      dropdown.style.display = 'none';
+    }
+  });
+</script>

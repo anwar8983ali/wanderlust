@@ -38,6 +38,27 @@ async function main() {
   await mongoose.connect(dburl);
 }
 
+app.get("/api/autocomplete", async (req, res) => {
+  try {
+    const query = req.query.q;
+    if (!query || query.length < 2) return res.json([]);
+
+    const response = await axios.get("https://api.locationiq.com/v1/autocomplete", {
+      params: {
+        key: process.env.LOCATIONIQ_KEY,
+        q: query,
+        limit: 5,
+        format: "json"
+      }
+    });
+
+    res.json(response.data);
+  } catch (err) {
+    console.log("Autocomplete error:", err.message);
+    res.json([]);
+  }
+});
+
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
 app.use(express.json());
