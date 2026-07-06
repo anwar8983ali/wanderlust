@@ -30,9 +30,55 @@ async function geocodeLocation(location, country) {
   }
 }
 
-module.exports.index=async (req, res) => {
-  const allListings = await Listing.find({});
-  res.render("listing/index.ejs", { allListings });
+module.exports.index = async (req, res) => {
+  const { category } = req.query;
+
+  // Specific category selected -> plain filter, no trending logic needed
+  if (category && category !== "Trending") {
+    const allListings = await Listing.find({ category });
+    return res.render("listing/index.ejs", { allListings, activeCategory: category });
+  }
+
+  // "Trending" (or no filter) -> rank by real popularity signals
+  const allListings = await Listing.aggregate([
+    {
+      $lookup: {
+        from: "bookings",
+        localField: "_id",
+        foreignField: "listing",
+        as: "bookingData"
+      }
+    },
+    {
+      $lookup: {
+        from: "users",
+        localField: "_id",
+        foreignField: "favorites",
+        as: "favoritedBy"
+      }
+    },
+    {
+      $addFields: {
+        bookingCount: { $size: "$bookingData" },
+        reviewCount: { $size: { $ifNull: ["$reviews", []] } },
+        favoriteCount: { $size: "$favoritedBy" }
+      }
+    },
+    {
+      $addFields: {
+        trendingScore: {
+          $add: [
+            { $multiply: ["$bookingCount", 3] },
+            { $multiply: ["$reviewCount", 2] },
+            "$favoriteCount"
+          ]
+        }
+      }
+    },
+    { $sort: { trendingScore: -1, createdAt: -1 } }
+  ]);
+
+  res.render("listing/index.ejs", { allListings, activeCategory: null });
 };
 
 module.exports.renderNewForm=(req, res) => {
@@ -121,7 +167,6 @@ module.exports.nearMe = async (req, res) => {
     query: { "geometry.coordinates": { $ne: [0, 0] } }
   };
 
-  // Only limit distance if the user actually picked a radius
   if (radius) {
     geoNearStage.maxDistance = parseFloat(radius) * 1000;
   }
