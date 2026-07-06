@@ -156,26 +156,33 @@
    <% } %>
 
   <div class="row row-cols-lg-3 row-cols-md-2 row-cols-sm-1 mt-3">
-    <% for (let listing of allListings) {
-         if (!listing._id || !listing.image || !listing.image.url) continue;
-    %>
-      <a href="/listings/<%= listing._id %>" class="listing-link">
-        <div class="card listing-card">
-          <img src="<%= listing.image.url %>" class="card-img-top" alt="listingImage" style="height:20rem;">
-          <div class="card-img-overlay"></div>
-          <div class="card-body">
-            <p class="card-text">
-              <b><%= listing.title %></b><br>
-              &#8377; <%= listing.price.toLocaleString("en-IN") %>/night
-              <i class="tax-info">  &nbsp;&nbsp;+18% GST</i>
-              <% if (listing.distanceKm) { %>
-                <br><span class="distance-badge"><%= listing.distanceKm %> km away</span>
-              <% } %>
-            </p>
-          </div>
-        </div>
-      </a>
-    <% } %>
+   <% for (let listing of allListings) {
+     if (!listing._id || !listing.image || !listing.image.url) continue;
+%>
+  <a href="/listings/<%= listing._id %>" class="listing-link">
+    <div class="card listing-card position-relative">
+      <% if (currUser) { %>
+        <button class="favorite-btn" data-id="<%= listing._id %>"
+          style="position:absolute; top:10px; right:10px; z-index:10; background:rgba(255,255,255,0.9); border:none; border-radius:50%; width:36px; height:36px;"
+          onclick="event.preventDefault(); event.stopPropagation(); toggleFavorite('<%= listing._id %>', this)">
+          <i class="<%= currUser.favorites && currUser.favorites.some(f => f.equals(listing._id)) ? 'fas' : 'far' %> fa-heart" style="color:#fe424d;"></i>
+        </button>
+      <% } %>
+      <img src="<%= listing.image.url %>" class="card-img-top" alt="listingImage" style="height:20rem;">
+      <div class="card-img-overlay"></div>
+      <div class="card-body">
+        <p class="card-text">
+          <b><%= listing.title %></b><br>
+          &#8377; <%= listing.price.toLocaleString("en-IN") %>/night
+          <i class="tax-info">  &nbsp;&nbsp;+18% GST</i>
+          <% if (listing.distanceKm) { %>
+            <br><span class="distance-badge"><%= listing.distanceKm %> km away</span>
+          <% } %>
+        </p>
+      </div>
+    </div>
+  </a>
+<% } %>
 
     <% if (typeof isNearMe !== 'undefined' && isNearMe && allListings.length === 0) { %>
       <div class="col-12 mt-4">
@@ -223,3 +230,16 @@
       );
     });
   </script>
+
+
+  <script>
+async function toggleFavorite(listingId, btn) {
+  const res = await fetch(`/listings/${listingId}/favorite`, {
+    method: 'POST',
+    headers: { 'Accept': 'application/json' }
+  });
+  const data = await res.json();
+  const icon = btn.querySelector('i');
+  icon.className = data.favorited ? 'fas fa-heart' : 'far fa-heart';
+}
+</script>

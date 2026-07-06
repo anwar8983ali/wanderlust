@@ -34,6 +34,13 @@
               <span><%= listing.totalSpots || 1 %></span>
             </div>
           </div>
+
+          <% if (currUser) { %>
+            <button id="favoriteBtn" class="btn btn-outline-danger mt-3" data-id="<%= listing._id %>">
+              <i class="<%= currUser.favorites && currUser.favorites.some(f => f.equals(listing._id)) ? 'fas' : 'far' %> fa-heart"></i>
+              <span id="favoriteText"><%= currUser.favorites && currUser.favorites.some(f => f.equals(listing._id)) ? 'Saved' : 'Save' %></span>
+            </button>
+          <% } %>
         </div>
       </div>
     </div>
@@ -396,4 +403,22 @@ document.addEventListener('DOMContentLoaded', function() {
       });
     });
   <% } %>
+</script>
+
+<!-- Favorite / Wishlist button -->
+<script>
+  const favBtn = document.getElementById('favoriteBtn');
+  if (favBtn) {
+    favBtn.addEventListener('click', async () => {
+      const res = await fetch(`/listings/${favBtn.dataset.id}/favorite`, {
+        method: 'POST',
+        headers: { 'Accept': 'application/json' }
+      });
+      const data = await res.json();
+      const icon = favBtn.querySelector('i');
+      const text = document.getElementById('favoriteText');
+      icon.className = data.favorited ? 'fas fa-heart' : 'far fa-heart';
+      text.innerText = data.favorited ? 'Saved' : 'Save';
+    });
+  }
 </script>

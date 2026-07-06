@@ -1,0 +1,49 @@
+<% layout('layouts/boilerPlate') %>
+<div class="container mt-4">
+  <h3 class="mb-4"><i class="fas fa-heart me-2" style="color:#fe424d;"></i>My Wishlist</h3>
+
+  <% if (listings.length === 0) { %>
+    <div class="alert alert-info">You haven't saved any listings yet. <a href="/listings">Explore listings</a></div>
+  <% } else { %>
+    <div class="row row-cols-lg-3 row-cols-md-2 row-cols-sm-1">
+      <% for (let listing of listings) {
+           if (!listing || !listing._id || !listing.image || !listing.image.url) continue;
+      %>
+        <div class="col mb-4">
+          <div class="card listing-card position-relative">
+            <button class="favorite-btn favorited" data-id="<%= listing._id %>" style="position:absolute; top:10px; right:10px; z-index:10; background:rgba(255,255,255,0.9); border:none; border-radius:50%; width:36px; height:36px;">
+              <i class="fas fa-heart" style="color:#fe424d;"></i>
+            </button>
+            <a href="/listings/<%= listing._id %>" class="listing-link text-decoration-none text-dark">
+              <img src="<%= listing.image.url %>" class="card-img-top" alt="listingImage" style="height:16rem; object-fit:cover;">
+              <div class="card-body">
+                <p class="card-text">
+                  <b><%= listing.title %></b><br>
+                  &#8377; <%= listing.price.toLocaleString("en-IN") %>/night
+                </p>
+              </div>
+            </a>
+          </div>
+        </div>
+      <% } %>
+    </div>
+  <% } %>
+</div>
+
+<script>
+  document.querySelectorAll('.favorite-btn').forEach(btn => {
+    btn.addEventListener('click', async (e) => {
+      e.preventDefault();
+      const listingId = btn.dataset.id;
+      const res = await fetch(`/listings/${listingId}/favorite`, {
+        method: 'POST',
+        headers: { 'Accept': 'application/json' }
+      });
+      const data = await res.json();
+      if (!data.favorited) {
+        // removed from wishlist -> remove the card from view
+        btn.closest('.col').remove();
+      }
+    });
+  });
+</script>

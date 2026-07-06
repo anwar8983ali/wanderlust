@@ -8,9 +8,13 @@ const userSchema=new Schema({
     email:{
         type:String,
         required:true,
-    }
+    },
 
-    
+    favorites: [{
+        type: Schema.Types.ObjectId,
+        ref: "listing"
+    }]
+
 });
 
 userSchema.plugin(passportLocalMongoose);
