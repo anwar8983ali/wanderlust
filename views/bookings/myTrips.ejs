@@ -17,9 +17,9 @@
                 <%= booking.checkIn.toDateString() %> &rarr; <%= booking.checkOut.toDateString() %><br>
                 <%= booking.totalNights %> nights &middot; &#8377;<%= booking.totalPrice.toLocaleString("en-IN") %>
               </p>
-              <span class="badge bg-<%= booking.status === 'confirmed' ? 'success' : 'secondary' %> mb-2">
-                <%= booking.status %>
-              </span>
+              <span class="badge bg-<%= booking.displayStatus === 'confirmed' ? 'success' : booking.displayStatus === 'completed' ? 'primary' : 'secondary' %>">
+  <%= booking.displayStatus %>
+</span>
               <% if (booking.status === 'confirmed') { %>
                 <form action="/bookings/<%= booking._id %>/cancel" method="POST">
                   <button class="btn btn-sm btn-outline-danger">Cancel booking</button>

@@ -25,9 +25,13 @@ module.exports.createBooking = async (req, res) => {
     return res.redirect(`/listings/${id}`);
   }
 
+  const now = new Date();
+
+  // Only bookings that haven't already checked out count as "occupying" a date
   const overlappingBookings = await Booking.find({
     listing: id,
     status: "confirmed",
+    checkOut: { $gt: now },              // ignore past/completed bookings
     checkIn: { $lt: checkOutDate },
     checkOut: { $gt: checkInDate }
   });
@@ -62,7 +66,19 @@ module.exports.myTrips = async (req, res) => {
   const bookings = await Booking.find({ user: req.user._id })
     .populate("listing")
     .sort({ checkIn: 1 });
-  res.render("bookings/myTrips.ejs", { bookings });
+
+  const now = new Date();
+  const bookingsWithComputedStatus = bookings.map(b => {
+    const obj = b.toObject();
+    if (b.status === "confirmed" && b.checkOut < now) {
+      obj.displayStatus = "completed";
+    } else {
+      obj.displayStatus = b.status;
+    }
+    return obj;
+  });
+
+  res.render("bookings/myTrips.ejs", { bookings: bookingsWithComputedStatus });
 };
 
 module.exports.cancelBooking = async (req, res) => {
@@ -81,7 +97,14 @@ module.exports.cancelBooking = async (req, res) => {
 module.exports.getBookedDates = async (req, res) => {
   const { id } = req.params;
   const listing = await Listing.findById(id);
-  const bookings = await Booking.find({ listing: id, status: "confirmed" });
+  const now = new Date();
+
+  // Only future/current bookings block the calendar — past ones free up automatically
+  const bookings = await Booking.find({
+    listing: id,
+    status: "confirmed",
+    checkOut: { $gt: now }
+  });
 
   const ranges = bookings.map(b => ({
     checkIn: b.checkIn,
