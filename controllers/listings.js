@@ -1,5 +1,7 @@
 const Listing=require("../models/listing");
 const axios = require("axios");
+const { GoogleGenerativeAI } = require("@google/generative-ai");
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 // Converts "location, country" text into map coordinates — free, no key needed
 async function geocodeLocation(location, country) {
@@ -30,12 +32,33 @@ async function geocodeLocation(location, country) {
   }
 }
 
+// Uses Gemini to summarize overall guest sentiment from review comments
+async function generateReviewSummary(reviews) {
+  try {
+    const comments = reviews.map(r => `- (${r.rating}★) ${r.comment}`).join("\n");
+    const prompt = `Here are guest reviews for a vacation rental listing:\n\n${comments}\n\nWrite a short 1-2 sentence summary of the overall guest sentiment. Mention common praises and any recurring complaints, if present. Be neutral and factual, no marketing language.`;
+
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+    const result = await model.generateContent(prompt);
+    return result.response.text().trim();
+  } catch (err) {
+    console.log("Review summary generation error:", err.message);
+    return "";
+  }
+}
+
 module.exports.index = async (req, res) => {
   const { category } = req.query;
 
-  // Specific category selected -> plain filter, no trending logic needed
+  // Specific category selected -> plain filter with rating info attached
   if (category && category !== "Trending") {
-    const allListings = await Listing.find({ category });
+    const allListings = await Listing.find({ category }).populate("reviews");
+    allListings.forEach(listing => {
+      if (listing.reviews.length > 0) {
+        const sum = listing.reviews.reduce((acc, r) => acc + r.rating, 0);
+        listing.avgRating = (sum / listing.reviews.length).toFixed(1);
+      }
+    });
     return res.render("listing/index.ejs", { allListings, activeCategory: category });
   }
 
@@ -58,10 +81,25 @@ module.exports.index = async (req, res) => {
       }
     },
     {
+      $lookup: {
+        from: "reviews",
+        localField: "reviews",
+        foreignField: "_id",
+        as: "reviewData"
+      }
+    },
+    {
       $addFields: {
         bookingCount: { $size: "$bookingData" },
         reviewCount: { $size: { $ifNull: ["$reviews", []] } },
-        favoriteCount: { $size: "$favoritedBy" }
+        favoriteCount: { $size: "$favoritedBy" },
+        avgRating: {
+          $cond: [
+            { $gt: [{ $size: "$reviewData" }, 0] },
+            { $round: [{ $avg: "$reviewData.rating" }, 1] },
+            null
+          ]
+        }
       }
     },
     {
@@ -85,14 +123,38 @@ module.exports.renderNewForm=(req, res) => {
   res.render("listing/new.ejs");
 }
 
-module.exports.showListing=async (req, res) => {
+module.exports.showListing = async (req, res) => {
   let { id } = req.params;
   const listing = await Listing.findById(id).populate({path:"reviews",populate:{path:"auther"}}).populate("owner");
   if(!listing){
     req.flash("error","Listing you requested does not exist");
-    res.redirect("/listings");
+    return res.redirect("/listings");
   }
-  res.render("listing/show.ejs", { listing });
+
+  const totalReviews = listing.reviews.length;
+  const avgRating = totalReviews > 0
+    ? (listing.reviews.reduce((sum, r) => sum + r.rating, 0) / totalReviews).toFixed(1)
+    : null;
+
+  const ratingCounts = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+  listing.reviews.forEach(r => {
+    if (ratingCounts[r.rating] !== undefined) ratingCounts[r.rating]++;
+  });
+  const ratingBreakdown = [5, 4, 3, 2, 1].map(star => ({
+    star,
+    count: ratingCounts[star],
+    percent: totalReviews > 0 ? Math.round((ratingCounts[star] / totalReviews) * 100) : 0
+  }));
+
+  // Only regenerate the AI summary if the review count has changed since last time
+  if (totalReviews >= 2 && listing.reviewSummaryCount !== totalReviews) {
+    const summary = await generateReviewSummary(listing.reviews);
+    listing.reviewSummary = summary;
+    listing.reviewSummaryCount = totalReviews;
+    await listing.save();
+  }
+
+  res.render("listing/show.ejs", { listing, avgRating, totalReviews, ratingBreakdown });
 };
 
 module.exports.createListing=async (req, res, next) => {
@@ -117,7 +179,7 @@ module.exports.editListing=async (req, res) => {
   const listing = await Listing.findById(id);
   if(!listing){
     req.flash("error","Listing you requested does not exist");
-    res.redirect("/listings");
+    return res.redirect("/listings");
   }
   let originalImageUrl = listing.image.url;
   originalImageUrl = originalImageUrl.replace("/upload", "/upload/w_250");

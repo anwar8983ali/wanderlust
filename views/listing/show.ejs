@@ -123,6 +123,46 @@
 
   <hr class="my-5">
 
+  <!-- Ratings Summary -->
+  <div class="row justify-content-center">
+    <div class="col-md-10">
+      <% if (totalReviews > 0) { %>
+        <div class="card mb-4 shadow-sm">
+          <div class="card-body">
+            <div class="d-flex align-items-center gap-4 flex-wrap">
+              <div class="text-center">
+                <div style="font-size: 3rem; font-weight: 700; line-height: 1;"><%= avgRating %></div>
+                <div class="text-warning mb-1">
+                  <% for (let i = 1; i <= 5; i++) { %>
+                    <i class="fas fa-star <%= i <= Math.round(avgRating) ? '' : 'text-secondary' %>"></i>
+                  <% } %>
+                </div>
+                <div class="text-muted small"><%= totalReviews %> review<%= totalReviews !== 1 ? 's' : '' %></div>
+              </div>
+
+              <div class="flex-grow-1" style="min-width: 250px;">
+                <% ratingBreakdown.forEach(row => { %>
+                  <div class="d-flex align-items-center gap-2 mb-1">
+                    <span style="width: 40px;" class="small"><%= row.star %> ★</span>
+                    <div class="flex-grow-1 bg-light rounded" style="height: 8px;">
+                      <div class="bg-warning rounded" style="height: 8px; width: <%= row.percent %>%;"></div>
+                    </div>
+                    <span class="text-muted small" style="width: 30px;"><%= row.count %></span>
+                  </div>
+                <% }) %>
+              </div>
+            </div>
+
+            <% if (listing.reviewSummary) { %>
+              <hr>
+              <p class="mb-0"><i class="fas fa-robot me-2 text-muted"></i><em><%= listing.reviewSummary %></em></p>
+            <% } %>
+          </div>
+        </div>
+      <% } %>
+    </div>
+  </div>
+
   <!-- Review Section -->
   <div class="row justify-content-center">
     <div class="col-md-10">
