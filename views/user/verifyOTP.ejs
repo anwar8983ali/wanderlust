@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify OTP</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+
+<div class="container mt-5">
+
+    <div class="card mx-auto shadow p-4" style="max-width:450px;">
+
+        <h2 class="text-center mb-3">Verify OTP</h2>
+
+        <form action="/verify-otp" method="POST">
+
+            <input
+                type="email"
+                name="email"
+                class="form-control mb-3"
+                placeholder="Enter Email"
+                required
+            >
+
+            <input
+                type="text"
+                name="otp"
+                class="form-control mb-3"
+                placeholder="Enter 6-digit OTP"
+                required
+            >
+
+            <button class="btn btn-primary w-100">
+                Verify OTP
+            </button>
+
+        </form>
+
+    </div>
+
+</div>
+
+</body>
+</html>
