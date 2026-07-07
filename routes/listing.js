@@ -18,7 +18,7 @@ const router = express.Router({mergeParams: true});
 // Index and Create routes using route()
 router.route("/")
     .get(wrapAsync(listingController.index))
-    .post(isLoggedIn,upload.single('image'), validateListing, wrapAsync(listingController.createListing));
+    .post(isLoggedIn,upload.array('image', 6), validateListing, wrapAsync(listingController.createListing));
 
 // New Route
 router.get("/new", isLoggedIn, listingController.renderNewForm);
@@ -28,7 +28,7 @@ router.get("/near-me", wrapAsync(listingController.nearMe));
 // Show, Update, Delete routes using route()
 router.route("/:id")
     .get(wrapAsync(listingController.showListing))
-    .put(isLoggedIn, isOwner,upload.single('image'), validateListing, wrapAsync(listingController.updateListing))
+    .put(isLoggedIn, isOwner,upload.array('image', 6), validateListing, wrapAsync(listingController.updateListing))
     .delete(isLoggedIn, isOwner, wrapAsync(listingController.deleteListing));
 
 // Edit Route

@@ -21,11 +21,12 @@
       </div >
 
       <div class="mb-3">
-        <label for="image" class="form-label">Upload listing image:</label>
+        <label for="image" class="form-label">Upload listing images:</label>
       <input
         name="image"
-        type="file" required
+        type="file" multiple required
       />
+      <small class="text-muted d-block mt-1">Select multiple images (hold Ctrl/Cmd to pick more than one). The first image becomes the cover photo.</small>
 
       <div id="validationServerUsernameFeedback" class="invalid-feedback">
         Please enter valid image.

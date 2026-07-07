@@ -17,12 +17,22 @@
       >
        </div>
        <div class="mb-3">
-          Oroginal Image:<br>
-         <img src="<%=originalImageUrl %>" alt="">
+          Current Images:<br>
+          <div class="d-flex gap-2 flex-wrap mt-2">
+            <% if (listing.image && listing.image.url) { %>
+              <img src="<%= listing.image.url.replace('/upload', '/upload/w_150') %>" alt="cover" style="height:100px; border-radius:6px;" title="Cover photo">
+            <% } %>
+            <% if (listing.images && listing.images.length > 0) { %>
+              <% listing.images.forEach(img => { %>
+                <img src="<%= img.url.replace('/upload', '/upload/w_150') %>" alt="gallery" style="height:100px; border-radius:6px;">
+              <% }) %>
+            <% } %>
+          </div>
        </div>
        <div class="mb-3">
-          <label for="image" class="form-label">Upload New Image:</label>
-         <input name="image" type="file" class="form-control" required/>
+          <label for="image" class="form-label">Upload New Images:</label>
+         <input name="image" type="file" class="form-control" multiple>
+         <small class="text-muted">Uploading new images will replace all current photos. Leave empty to keep the existing ones.</small>
        </div>
        <div class="row">
         <div class="mb-3 col-md-4">
@@ -44,6 +54,17 @@
       />
        </div>
        </div>
+
+       <div class="mb-3">
+        <label for="category" class="form-label">Category:</label>
+        <select name="listing[category]" class="form-control" required>
+          <% const categories = ["Trending", "Rooms", "Iconic cities", "Mountains", "Castles", "Amazing pools", "Farms", "Camping", "Arctic", "Domes", "Boats"]; %>
+          <% categories.forEach(cat => { %>
+            <option value="<%= cat %>" <%= listing.category === cat ? 'selected' : '' %>><%= cat %></option>
+          <% }) %>
+        </select>
+       </div>
+
         <div class="mb-3">
           <label for="location" class="form-label">Location:</label>
              <input

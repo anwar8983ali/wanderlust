@@ -157,20 +157,28 @@ module.exports.showListing = async (req, res) => {
   res.render("listing/show.ejs", { listing, avgRating, totalReviews, ratingBreakdown });
 };
 
-module.exports.createListing=async (req, res, next) => {
-    let url=req.file.path;
-    let filename=req.file.filename;
+module.exports.createListing = async (req, res, next) => {
     const newListing = new Listing(req.body.listing);
-    newListing.owner=req.user._id;
-    newListing.image={url,filename};
-
+    newListing.owner = req.user._id;
+ 
+    // req.files is now an array (up to 6 images uploaded under "image")
+    const files = req.files || [];
+ 
+    if (files.length > 0) {
+      // First uploaded image becomes the cover image
+      newListing.image = { url: files[0].path, filename: files[0].filename };
+ 
+      // Remaining images (if any) go into the gallery array
+      newListing.images = files.slice(1).map(f => ({ url: f.path, filename: f.filename }));
+    }
+ 
     const coordinates = await geocodeLocation(req.body.listing.location, req.body.listing.country);
     if (coordinates) {
       newListing.geometry = { type: "Point", coordinates };
     }
-
+ 
     await newListing.save();
-    req.flash("success","New listing created");
+    req.flash("success", "New listing created");
     res.redirect("/listings");
 };
 
@@ -186,23 +194,27 @@ module.exports.editListing=async (req, res) => {
   res.render("listing/edit.ejs", { listing, originalImageUrl });
 };
 
-module.exports.updateListing=async (req, res) => {
+module.exports.updateListing = async (req, res) => {
   let { id } = req.params;
   let listingData = { ...req.body.listing };
-
+ 
   const coordinates = await geocodeLocation(listingData.location, listingData.country);
   if (coordinates) {
     listingData.geometry = { type: "Point", coordinates };
   }
-
+ 
   let listing = await Listing.findByIdAndUpdate(id, listingData);
-  if(typeof req.file!="undefined"){
-    let url=req.file.path;
-    let filename=req.file.filename;
-    listing.image={url,filename};
+ 
+  const files = req.files || [];
+  if (files.length > 0) {
+    // Replace cover image with the first new upload
+    listing.image = { url: files[0].path, filename: files[0].filename };
+    // Replace gallery images with any additional new uploads
+    listing.images = files.slice(1).map(f => ({ url: f.path, filename: f.filename }));
     await listing.save();
   }
-  req.flash("success","Listing updated!");
+ 
+  req.flash("success", "Listing updated!");
   res.redirect(`/listings/${id}`);
 };
 
