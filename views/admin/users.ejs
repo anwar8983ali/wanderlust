@@ -1,0 +1,34 @@
+<% layout('layouts/boilerPlate') %>
+<div class="container mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h3>Manage Users</h3>
+    <a href="/admin" class="btn btn-sm btn-outline-secondary">&larr; Back to dashboard</a>
+  </div>
+
+  <table class="table table-hover align-middle">
+    <thead>
+      <tr>
+        <th>Username</th>
+        <th>Email</th>
+        <th>Role</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      <% users.forEach(u => { %>
+        <tr>
+          <td><%= u.username %></td>
+          <td><%= u.email %></td>
+          <td><span class="badge bg-<%= u.role === 'admin' ? 'dark' : 'secondary' %>"><%= u.role %></span></td>
+          <td>
+            <form action="/admin/users/<%= u._id %>/toggle-admin" method="POST" onsubmit="return confirm('Change this user\'s role?')">
+              <button class="btn btn-sm btn-outline-dark">
+                <%= u.role === 'admin' ? 'Remove admin' : 'Make admin' %>
+              </button>
+            </form>
+          </td>
+        </tr>
+      <% }) %>
+    </tbody>
+  </table>
+</div>

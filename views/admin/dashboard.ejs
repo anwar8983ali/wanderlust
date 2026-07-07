@@ -1,0 +1,86 @@
+<% layout('layouts/boilerPlate') %>
+<div class="container mt-4">
+  <h3 class="mb-4"><i class="fas fa-shield-halved me-2"></i>Admin Dashboard</h3>
+
+  <div class="row g-3 mb-4">
+    <div class="col-md-3">
+      <div class="card shadow-sm text-center p-3">
+        <div class="fs-2 fw-bold"><%= totalListings %></div>
+        <div class="text-muted small">Listings</div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card shadow-sm text-center p-3">
+        <div class="fs-2 fw-bold"><%= totalUsers %></div>
+        <div class="text-muted small">Users</div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card shadow-sm text-center p-3">
+        <div class="fs-2 fw-bold"><%= totalBookings %></div>
+        <div class="text-muted small">Bookings</div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card shadow-sm text-center p-3">
+        <div class="fs-2 fw-bold"><%= totalReviews %></div>
+        <div class="text-muted small">Reviews</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="mb-4">
+    <a href="/admin/listings" class="btn btn-outline-dark btn-sm me-2">Manage Listings</a>
+    <a href="/admin/users" class="btn btn-outline-dark btn-sm">Manage Users</a>
+  </div>
+
+  <div class="row g-4">
+    <div class="col-md-6">
+      <div class="card shadow-sm">
+        <div class="card-header bg-white"><strong>Top Reviewed Listings</strong></div>
+        <ul class="list-group list-group-flush">
+          <% topListings.forEach(l => { %>
+            <li class="list-group-item d-flex justify-content-between">
+              <span><%= l.title %></span>
+              <span class="text-muted"><%= l.reviewCount %> reviews</span>
+            </li>
+          <% }) %>
+          <% if (topListings.length === 0) { %>
+            <li class="list-group-item text-muted">No listings yet</li>
+          <% } %>
+        </ul>
+      </div>
+    </div>
+
+    <div class="col-md-6">
+      <div class="card shadow-sm">
+        <div class="card-header bg-white"><strong>Recent Users</strong></div>
+        <ul class="list-group list-group-flush">
+          <% recentUsers.forEach(u => { %>
+            <li class="list-group-item d-flex justify-content-between">
+              <span><%= u.username %></span>
+              <span class="badge bg-<%= u.role === 'admin' ? 'dark' : 'secondary' %>"><%= u.role %></span>
+            </li>
+          <% }) %>
+        </ul>
+      </div>
+    </div>
+
+    <div class="col-md-12">
+      <div class="card shadow-sm">
+        <div class="card-header bg-white"><strong>Recent Bookings</strong></div>
+        <ul class="list-group list-group-flush">
+          <% recentBookings.forEach(b => { %>
+            <li class="list-group-item d-flex justify-content-between">
+              <span><%= b.user ? b.user.username : "Unknown" %> booked <%= b.listing ? b.listing.title : "a listing" %></span>
+              <span class="text-muted small"><%= new Date(b.checkIn).toLocaleDateString() %> - <%= new Date(b.checkOut).toLocaleDateString() %></span>
+            </li>
+          <% }) %>
+          <% if (recentBookings.length === 0) { %>
+            <li class="list-group-item text-muted">No bookings yet</li>
+          <% } %>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
