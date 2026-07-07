@@ -19,6 +19,7 @@ const User = require("./models/user.js");
 const bookingRouter = require("./routes/booking.js");
 const wishlistRouter = require("./routes/wishlist.js");
 const nodemailer = require("nodemailer");
+const adminRouter = require("./routes/admin.js");
 
 const listingRouter = require("./routes/listing.js");
 const reviewRouter = require("./routes/review.js");
@@ -245,6 +246,7 @@ app.post("/reset-password",async(req,res)=>{
 app.use("/listings", listingRouter);
 app.use("/", wishlistRouter);
 app.use("/", bookingRouter);
+app.use("/", adminRouter);
 app.use("/listings/:id/reviews", reviewRouter);
 app.use("/", userRouter);
 const Listing = require("./models/listing"); // your MongoDB model

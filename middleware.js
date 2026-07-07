@@ -61,3 +61,11 @@ module.exports.isReviewAuther=wrapAsync(async(req,res,next)=>{
   next();
 })
 
+
+module.exports.isAdmin = (req, res, next) => {
+  if (!req.isAuthenticated() || !req.user || req.user.role !== "admin") {
+    req.flash("error", "You don't have permission to access that page");
+    return res.redirect("/listings");
+  }
+  next();
+};

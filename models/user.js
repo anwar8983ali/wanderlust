@@ -1,12 +1,13 @@
-const mongoose = require("mongoose");
-const Schema = mongoose.Schema;
-const passportLocalMongoose = require("passport-local-mongoose");
+const mongoose=require('mongoose');
+const Schema=mongoose.Schema;
 
-const userSchema = new Schema({
+const passportLocalMongoose=require("passport-local-mongoose");
 
-    email: {
-        type: String,
-        required: true
+const userSchema=new Schema({
+
+    email:{
+        type:String,
+        required:true,
     },
 
     favorites: [{
@@ -14,18 +15,14 @@ const userSchema = new Schema({
         ref: "listing"
     }],
 
-    resetOTP: {
+    role: {
         type: String,
-        default: null
-    },
-
-    otpExpiry: {
-        type: Date,
-        default: null
+        enum: ["user", "admin"],
+        default: "user"
     }
 
 });
 
 userSchema.plugin(passportLocalMongoose);
 
-module.exports = mongoose.model("User", userSchema);
+module.exports = mongoose.model('User', userSchema);
