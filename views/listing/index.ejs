@@ -1,5 +1,4 @@
 <% layout('layouts/boilerPlate') %>
-  <!-- <h3>All Listings</h3> -->
    <style>
     #filters{
       margin-top: 1rem;
@@ -13,10 +12,16 @@
       margin-right:2rem;
       margin-top:2rem;
       opacity: 0.7;
+      cursor: pointer;
     }
 
     .filter:hover{
       opacity:1;
+    }
+
+    .active-filter{
+      opacity: 1 !important;
+      border-bottom: 2px solid black;
     }
 
      p {
@@ -28,16 +33,16 @@
     }
 
     .tax-toggle{
-  border:1px solid black;
-  border-radius:1rem;
-  height: fit-content;
-  padding:0.75rem 1rem;
-  display: flex;
-  align-items: center;
-  white-space: nowrap;
-  flex-shrink: 0;
-  margin-top: 2rem;
-}
+      border:1px solid black;
+      border-radius:1rem;
+      height: fit-content;
+      padding:0.75rem 1rem;
+      display: flex;
+      align-items: center;
+      white-space: nowrap;
+      flex-shrink: 0;
+      margin-top: 2rem;
+    }
 
     #nearMeBtn{
       cursor: pointer;
@@ -69,7 +74,7 @@
 
    </style>
    <div id="filters">
-       <button class="filter" id="nearMeBtn">
+       <button class="filter" id="nearMeBtn" style="border:none;">
         <div><i class="fa-solid fa-location-crosshairs"></i></div>
         <p>Near me</p>
        </button>
@@ -83,59 +88,59 @@
        </select>
 
        <a href="/listings?category=Trending" class="filter text-decoration-none text-dark <%= (!activeCategory || activeCategory === 'Trending') ? 'active-filter' : '' %>">
-  <div><i class="fa-solid fa-fire"></i></div>
-  <p>Trending</p>
-</a>
+        <div><i class="fa-solid fa-fire"></i></div>
+        <p>Trending</p>
+       </a>
 
-       <div class="filter">
+       <a href="/listings?category=Rooms" class="filter text-decoration-none text-dark <%= activeCategory === 'Rooms' ? 'active-filter' : '' %>">
         <div><i class="fa-solid fa-bed"></i></div>
         <p>Rooms</p>
-       </div>
+       </a>
 
-       <div class="filter">
+       <a href="/listings?category=Iconic%20cities" class="filter text-decoration-none text-dark <%= activeCategory === 'Iconic cities' ? 'active-filter' : '' %>">
         <div><i class="fa-solid fa-mountain-city"></i></div>
         <p>Iconic cities</p>
-       </div>
+       </a>
 
-       <div class="filter">
+       <a href="/listings?category=Mountains" class="filter text-decoration-none text-dark <%= activeCategory === 'Mountains' ? 'active-filter' : '' %>">
         <div><i class="fa-solid fa-mountain"></i></div>
         <p>Mountains</p>
-       </div>
+       </a>
 
-       <div class="filter">
+       <a href="/listings?category=Castles" class="filter text-decoration-none text-dark <%= activeCategory === 'Castles' ? 'active-filter' : '' %>">
         <div><i class="fa-solid fa-chess-rook"></i></div>
         <p>Castles</p>
-       </div>
+       </a>
 
-       <div class="filter">
+       <a href="/listings?category=Amazing%20pools" class="filter text-decoration-none text-dark <%= activeCategory === 'Amazing pools' ? 'active-filter' : '' %>">
         <div><i class="fa-solid fa-person-swimming"></i></div>
         <p>Amazing pools</p>
-       </div>
+       </a>
 
-        <div class="filter">
+        <a href="/listings?category=Farms" class="filter text-decoration-none text-dark <%= activeCategory === 'Farms' ? 'active-filter' : '' %>">
         <div><i class="fa-solid fa-cow"></i></div>
         <p>Farms</p>
-       </div>
+       </a>
 
-       <div class="filter">
+       <a href="/listings?category=Camping" class="filter text-decoration-none text-dark <%= activeCategory === 'Camping' ? 'active-filter' : '' %>">
         <div><i class="fa-solid fa-campground"></i></div>
         <p>Camping</p>
-       </div>
+       </a>
 
-       <div class="filter">
-        <div><i class="fa-solid fa-snowflake"></i></i></div>
+       <a href="/listings?category=Arctic" class="filter text-decoration-none text-dark <%= activeCategory === 'Arctic' ? 'active-filter' : '' %>">
+        <div><i class="fa-solid fa-snowflake"></i></div>
         <p>Arctic</p>
-       </div>
+       </a>
 
-       <div class="filter">
+       <a href="/listings?category=Domes" class="filter text-decoration-none text-dark <%= activeCategory === 'Domes' ? 'active-filter' : '' %>">
         <div><i class="fa-solid fa-igloo"></i></div>
         <p>Domes</p>
-       </div>
+       </a>
 
-       <div class="filter">
+       <a href="/listings?category=Boats" class="filter text-decoration-none text-dark <%= activeCategory === 'Boats' ? 'active-filter' : '' %>">
         <div><i class="fa-solid fa-sailboat"></i></div>
         <p>Boats</p>
-       </div>
+       </a>
 
        <div class="tax-toggle">
          <div class="form-check form-switch form-check-reverse">
@@ -155,38 +160,53 @@
      </p>
    <% } %>
 
+   <% if (activeCategory && activeCategory !== 'Trending') { %>
+     <p style="margin: 1rem 0 0 2rem; color: #666;">
+       Showing: <strong><%= activeCategory %></strong> &middot; <a href="/listings">Clear filter</a>
+     </p>
+   <% } %>
+
   <div class="row row-cols-lg-3 row-cols-md-2 row-cols-sm-1 mt-3">
-   <% for (let listing of allListings) {
-     if (!listing._id || !listing.image || !listing.image.url) continue;
-%>
-  <a href="/listings/<%= listing._id %>" class="listing-link">
-    <div class="card listing-card position-relative">
-      <% if (currUser) { %>
-        <button class="favorite-btn" data-id="<%= listing._id %>"
-          style="position:absolute; top:10px; right:10px; z-index:10; background:rgba(255,255,255,0.9); border:none; border-radius:50%; width:36px; height:36px;"
-          onclick="event.preventDefault(); event.stopPropagation(); toggleFavorite('<%= listing._id %>', this)">
-          <i class="<%= currUser.favorites && currUser.favorites.some(f => f.equals(listing._id)) ? 'fas' : 'far' %> fa-heart" style="color:#fe424d;"></i>
-        </button>
-      <% } %>
-      <img src="<%= listing.image.url %>" class="card-img-top" alt="listingImage" style="height:20rem;">
-      <div class="card-img-overlay"></div>
-      <div class="card-body">
-        <p class="card-text">
-          <b><%= listing.title %></b><br>
-          &#8377; <%= listing.price.toLocaleString("en-IN") %>/night
-          <i class="tax-info">  &nbsp;&nbsp;+18% GST</i>
-          <% if (listing.distanceKm) { %>
-            <br><span class="distance-badge"><%= listing.distanceKm %> km away</span>
+    <% for (let listing of allListings) {
+         if (!listing._id || !listing.image || !listing.image.url) continue;
+    %>
+      <a href="/listings/<%= listing._id %>" class="listing-link">
+        <div class="card listing-card position-relative">
+          <% if (currUser) { %>
+            <button class="favorite-btn" data-id="<%= listing._id %>"
+              style="position:absolute; top:10px; right:10px; z-index:10; background:rgba(255,255,255,0.9); border:none; border-radius:50%; width:36px; height:36px;"
+              onclick="event.preventDefault(); event.stopPropagation(); toggleFavorite('<%= listing._id %>', this)">
+              <i class="<%= currUser.favorites && currUser.favorites.some(f => f.equals(listing._id)) ? 'fas' : 'far' %> fa-heart" style="color:#fe424d;"></i>
+            </button>
           <% } %>
-        </p>
-      </div>
-    </div>
-  </a>
-<% } %>
+          <img src="<%= listing.image.url %>" class="card-img-top" alt="listingImage" style="height:20rem;">
+          <div class="card-img-overlay"></div>
+          <div class="card-body">
+            <p class="card-text">
+              <b><%= listing.title %></b><br>
+              &#8377; <%= listing.price.toLocaleString("en-IN") %>/night
+              <i class="tax-info">  &nbsp;&nbsp;+18% GST</i>
+              <% if (listing.avgRating) { %>
+                <br><span style="color:#fe424d;">★ <%= listing.avgRating %></span>
+              <% } %>
+              <% if (listing.distanceKm) { %>
+                <br><span class="distance-badge"><%= listing.distanceKm %> km away</span>
+              <% } %>
+            </p>
+          </div>
+        </div>
+      </a>
+    <% } %>
 
     <% if (typeof isNearMe !== 'undefined' && isNearMe && allListings.length === 0) { %>
       <div class="col-12 mt-4">
         <div class="alert alert-info">No listings found within this distance. Try a wider radius.</div>
+      </div>
+    <% } %>
+
+    <% if (activeCategory && activeCategory !== 'Trending' && allListings.length === 0) { %>
+      <div class="col-12 mt-4">
+        <div class="alert alert-info">No listings found in this category yet.</div>
       </div>
     <% } %>
   </div>
@@ -198,17 +218,13 @@
 
     taxSwitch.addEventListener('click',()=>{
       let taxInfo=document.getElementsByClassName('tax-info');
-
       for(info of taxInfo){
-
         if(info.style.display!="inline"){
           info.style.display="inline";
-        }
-        else{
+        } else {
           info.style.display="none";
         }
       }
-
     })
 
     document.getElementById('nearMeBtn').addEventListener('click', () => {
@@ -229,17 +245,14 @@
         }
       );
     });
+
+    async function toggleFavorite(listingId, btn) {
+      const res = await fetch(`/listings/${listingId}/favorite`, {
+        method: 'POST',
+        headers: { 'Accept': 'application/json' }
+      });
+      const data = await res.json();
+      const icon = btn.querySelector('i');
+      icon.className = data.favorited ? 'fas fa-heart' : 'far fa-heart';
+    }
   </script>
-
-
-  <script>
-async function toggleFavorite(listingId, btn) {
-  const res = await fetch(`/listings/${listingId}/favorite`, {
-    method: 'POST',
-    headers: { 'Accept': 'application/json' }
-  });
-  const data = await res.json();
-  const icon = btn.querySelector('i');
-  icon.className = data.favorited ? 'fas fa-heart' : 'far fa-heart';
-}
-</script>

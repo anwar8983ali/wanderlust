@@ -1,5 +1,7 @@
 const Joi = require('joi'); // Import Joi
-
+ 
+const categories = ["Trending", "Rooms", "Iconic cities", "Mountains", "Castles", "Amazing pools", "Farms", "Camping", "Arctic", "Domes", "Boats"];
+ 
 module.exports.listingSchema = Joi.object({
   listing: Joi.object({
     title: Joi.string().required(),
@@ -7,11 +9,12 @@ module.exports.listingSchema = Joi.object({
     price: Joi.number().min(0).required(),
     country: Joi.string().required(),
     location: Joi.string().required(),
-    totalSpots: Joi.number().min(1).required()
+    totalSpots: Joi.number().min(1).required(),
+    category: Joi.string().valid(...categories).required()
   }).required()
 });
-
-
+ 
+ 
 module.exports.reviewSchema=Joi.object({
   review:Joi.object({
     rating:Joi.number().required().min(1).max(5),

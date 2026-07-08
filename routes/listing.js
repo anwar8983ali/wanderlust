@@ -11,7 +11,7 @@ const upload = multer({ storage});
 
 const {isLoggedIn, validateListing, isOwner} = require("../middleware.js");
 
-const listingController = require("../controllers/listings.js");
+const listingController = require("../controllers/listing.js");
 
 const router = express.Router({mergeParams: true});
 

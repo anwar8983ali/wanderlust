@@ -3,41 +3,10 @@ const axios = require("axios");
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
-// Converts "location, country" text into map coordinates — free, no key needed
-async function geocodeLocation(location, country) {
-  try {
-    const query = `${location}, ${country}`;
-    console.log("🔍 Geocoding query:", query);
-
-    const response = await axios.get("https://us1.locationiq.com/v1/search", {
-      params: {
-        key: process.env.LOCATIONIQ_KEY,
-        q: query,
-        format: "json",
-        limit: 1
-      }
-    });
-
-    console.log("📍 LocationIQ response:", JSON.stringify(response.data));
-
-    if (response.data && response.data.length > 0) {
-      const { lat, lon } = response.data[0];
-      return [parseFloat(lon), parseFloat(lat)];
-    }
-    console.log("⚠️ No results found for:", query);
-    return null;
-  } catch (err) {
-    console.log("❌ Geocoding error:", err.message);
-    return null;
-  }
-}
-
-// Uses Gemini to summarize overall guest sentiment from review comments
 async function generateReviewSummary(reviews) {
   try {
     const comments = reviews.map(r => `- (${r.rating}★) ${r.comment}`).join("\n");
     const prompt = `Here are guest reviews for a vacation rental listing:\n\n${comments}\n\nWrite a short 1-2 sentence summary of the overall guest sentiment. Mention common praises and any recurring complaints, if present. Be neutral and factual, no marketing language.`;
-
     const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
     const result = await model.generateContent(prompt);
     return result.response.text().trim();
@@ -47,47 +16,43 @@ async function generateReviewSummary(reviews) {
   }
 }
 
+async function geocodeLocation(location, country) {
+  try {
+    const query = `${location}, ${country}`;
+    const response = await axios.get("https://us1.locationiq.com/v1/search", {
+      params: { key: process.env.LOCATIONIQ_KEY, q: query, format: "json", limit: 1 }
+    });
+    if (response.data && response.data.length > 0) {
+      const { lat, lon } = response.data[0];
+      return [parseFloat(lon), parseFloat(lat)];
+    }
+    return null;
+  } catch (err) {
+    console.log("❌ Geocoding error:", err.message);
+    return null;
+  }
+}
+
 module.exports.index = async (req, res) => {
   const { category } = req.query;
 
-  // Specific category selected -> plain filter with rating info attached
+  // Specific category selected -> plain filter
   if (category && category !== "Trending") {
     const allListings = await Listing.find({ category }).populate("reviews");
     allListings.forEach(listing => {
       if (listing.reviews.length > 0) {
-        const sum = listing.reviews.reduce((acc, r) => acc + r.rating, 0);
+        const sum = listing.reviews.reduce((acc, r) => acc + Number(r.rating), 0);
         listing.avgRating = (sum / listing.reviews.length).toFixed(1);
       }
     });
     return res.render("listing/index.ejs", { allListings, activeCategory: category });
   }
 
-  // "Trending" (or no filter) -> rank by real popularity signals
+  // "Trending" (or no filter) -> rank by popularity
   const allListings = await Listing.aggregate([
-    {
-      $lookup: {
-        from: "bookings",
-        localField: "_id",
-        foreignField: "listing",
-        as: "bookingData"
-      }
-    },
-    {
-      $lookup: {
-        from: "users",
-        localField: "_id",
-        foreignField: "favorites",
-        as: "favoritedBy"
-      }
-    },
-    {
-      $lookup: {
-        from: "reviews",
-        localField: "reviews",
-        foreignField: "_id",
-        as: "reviewData"
-      }
-    },
+    { $lookup: { from: "bookings", localField: "_id", foreignField: "listing", as: "bookingData" } },
+    { $lookup: { from: "users", localField: "_id", foreignField: "favorites", as: "favoritedBy" } },
+    { $lookup: { from: "reviews", localField: "reviews", foreignField: "_id", as: "reviewData" } },
     {
       $addFields: {
         bookingCount: { $size: "$bookingData" },
@@ -133,12 +98,13 @@ module.exports.showListing = async (req, res) => {
 
   const totalReviews = listing.reviews.length;
   const avgRating = totalReviews > 0
-    ? (listing.reviews.reduce((sum, r) => sum + r.rating, 0) / totalReviews).toFixed(1)
+    ? (listing.reviews.reduce((sum, r) => sum + Number(r.rating), 0) / totalReviews).toFixed(1)
     : null;
 
   const ratingCounts = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
   listing.reviews.forEach(r => {
-    if (ratingCounts[r.rating] !== undefined) ratingCounts[r.rating]++;
+    const rating = Number(r.rating);
+    if (ratingCounts[rating] !== undefined) ratingCounts[rating]++;
   });
   const ratingBreakdown = [5, 4, 3, 2, 1].map(star => ({
     star,
@@ -146,7 +112,6 @@ module.exports.showListing = async (req, res) => {
     percent: totalReviews > 0 ? Math.round((ratingCounts[star] / totalReviews) * 100) : 0
   }));
 
-  // Only regenerate the AI summary if the review count has changed since last time
   if (totalReviews >= 2 && listing.reviewSummaryCount !== totalReviews) {
     const summary = await generateReviewSummary(listing.reviews);
     listing.reviewSummary = summary;
@@ -157,28 +122,23 @@ module.exports.showListing = async (req, res) => {
   res.render("listing/show.ejs", { listing, avgRating, totalReviews, ratingBreakdown });
 };
 
-module.exports.createListing = async (req, res, next) => {
+module.exports.createListing=async (req, res, next) => {
     const newListing = new Listing(req.body.listing);
-    newListing.owner = req.user._id;
- 
-    // req.files is now an array (up to 6 images uploaded under "image")
+    newListing.owner=req.user._id;
+
     const files = req.files || [];
- 
     if (files.length > 0) {
-      // First uploaded image becomes the cover image
       newListing.image = { url: files[0].path, filename: files[0].filename };
- 
-      // Remaining images (if any) go into the gallery array
       newListing.images = files.slice(1).map(f => ({ url: f.path, filename: f.filename }));
     }
- 
+
     const coordinates = await geocodeLocation(req.body.listing.location, req.body.listing.country);
     if (coordinates) {
       newListing.geometry = { type: "Point", coordinates };
     }
- 
+
     await newListing.save();
-    req.flash("success", "New listing created");
+    req.flash("success","New listing created");
     res.redirect("/listings");
 };
 
@@ -194,34 +154,31 @@ module.exports.editListing=async (req, res) => {
   res.render("listing/edit.ejs", { listing, originalImageUrl });
 };
 
-module.exports.updateListing = async (req, res) => {
+module.exports.updateListing=async (req, res) => {
   let { id } = req.params;
   let listingData = { ...req.body.listing };
- 
+
   const coordinates = await geocodeLocation(listingData.location, listingData.country);
   if (coordinates) {
     listingData.geometry = { type: "Point", coordinates };
   }
- 
+
   let listing = await Listing.findByIdAndUpdate(id, listingData);
- 
+
   const files = req.files || [];
   if (files.length > 0) {
-    // Replace cover image with the first new upload
     listing.image = { url: files[0].path, filename: files[0].filename };
-    // Replace gallery images with any additional new uploads
     listing.images = files.slice(1).map(f => ({ url: f.path, filename: f.filename }));
     await listing.save();
   }
- 
-  req.flash("success", "Listing updated!");
+
+  req.flash("success","Listing updated!");
   res.redirect(`/listings/${id}`);
 };
 
 module.exports.deleteListing=async (req, res) => {
   let { id } = req.params;
-  let deletedListing = await Listing.findByIdAndDelete(id);
-  console.log(deletedListing);
+  await Listing.findByIdAndDelete(id);
   req.flash("success","listing deleted");
   res.redirect("/listings");
 };
