@@ -251,5 +251,5 @@ module.exports.nearMe = async (req, res) => {
     listing.distanceKm = (listing.distance / 1000).toFixed(1);
   });
 
-  res.render("listing/index.ejs", { allListings: listings, isNearMe: true, radius: radius || null });
+  res.render("listing/index.ejs", { allListings: listings, isNearMe: true, radius: radius || null, activeCategory: null });
 };
