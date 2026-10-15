@@ -42,6 +42,10 @@ async function main() {
   await mongoose.connect(dburl);
 }
 
+app.get("/health", (req, res) => {
+  res.status(200).send("ok");
+});
+
 app.get("/api/autocomplete", async (req, res) => {
   try {
     const query = req.query.q;
