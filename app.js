@@ -107,14 +107,20 @@ const sessionOptions = {
   },
 };
 
-//trasporter for otp
+
 const transporter = nodemailer.createTransport({
-  service: "gmail",
+  host: "smtp.gmail.com",
+  port: 587,
+  secure: false,
   auth: {
     user: process.env.EMAIL,
     pass: process.env.EMAIL_PASSWORD,
   },
+  connectionTimeout: 15000,
+  greetingTimeout: 15000,
+  socketTimeout: 20000,
 });
+
 
 app.use(session(sessionOptions));
 app.use(flash());
@@ -189,31 +195,45 @@ app.get("/verify-otp",(req,res)=>{
     res.render("user/verifyOTP");
 });
 
-app.post("/verify-otp", async (req, res) => {
 
+app.post("/verify-otp", async (req, res) => {
+  try {
     const { email, otp } = req.body;
+
+    console.log("Verify OTP route called");
+
+    if (!email || !otp) {
+      req.flash("error", "Email and OTP are required");
+      return res.redirect("/verify-otp");
+    }
 
     const user = await User.findOne({ email });
 
-     console.log("Verify OTP route called");
-
     if (!user) {
-        req.flash("error","User not found");
-        return res.redirect("/verify-otp");
+      req.flash("error", "User not found");
+      return res.redirect("/verify-otp");
     }
 
-    if (user.resetOTP !== otp) {
-        req.flash("error","Invalid OTP");
-        return res.redirect("/verify-otp");
+    if (String(user.resetOTP) !== String(otp).trim()) {
+      req.flash("error", "Invalid OTP");
+      return res.redirect("/verify-otp");
     }
 
-    if (user.otpExpiry < Date.now()) {
-        req.flash("error","OTP Expired");
-        return res.redirect("/forgot-password");
+    if (!user.otpExpiry || user.otpExpiry.getTime() < Date.now()) {
+      req.flash("error", "OTP expired");
+      return res.redirect("/forgot-password");
     }
 
-    res.redirect(`/reset-password?email=${email}`);
+    return res.redirect(
+      `/reset-password?email=${encodeURIComponent(email)}`
+    );
+  } catch (err) {
+    console.error("OTP verification error:", err);
+    req.flash("error", "Something went wrong");
+    return res.redirect("/verify-otp");
+  }
 });
+
 
 app.get("/reset-password",(req,res)=>{
 

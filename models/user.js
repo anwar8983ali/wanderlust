@@ -10,6 +10,10 @@ const userSchema=new Schema({
         required:true,
     },
 
+    resetOTP: String,
+
+    otpExpiry: Date,
+
     favorites: [{
         type: Schema.Types.ObjectId,
         ref: "listing"
