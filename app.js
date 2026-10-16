@@ -18,7 +18,7 @@ const LocalStrategy = require("passport-local");
 const User = require("./models/user.js");
 const bookingRouter = require("./routes/booking.js");
 const wishlistRouter = require("./routes/wishlist.js");
-const nodemailer = require("nodemailer");
+const crypto = require("crypto");
 const adminRouter = require("./routes/admin.js");
 
 const listingRouter = require("./routes/listing.js");
@@ -91,7 +91,7 @@ const store = MongoStore.create({
   touchAfter: 24 * 3600,
 });
 
-store.on("error", () => {
+store.on("error", (error) => {
   console.log("error in mongo store", error);
 });
 
@@ -107,20 +107,32 @@ const sessionOptions = {
   },
 };
 
+async function sendOTPMail(to, username, otp) {
+  await axios.post(
+    "https://api.brevo.com/v3/smtp/email",
+    {
+      sender: { name: "Wanderlust", email: process.env.EMAIL },
+      to: [{ email: to }],
+      subject: "Wanderlust Password Reset OTP",
+      htmlContent: `
+        <h2>Password Reset</h2>
+        <p>Hello ${username},</p>
+        <p>Your OTP is:</p>
+        <h1>${otp}</h1>
+        <p>This OTP is valid for 5 minutes.</p>
+        <p>If you didn't request this, please ignore this email.</p>
+      `,
+    },
+    {
+      headers: {
+        "api-key": process.env.BREVO_API_KEY,
+        "Content-Type": "application/json",
+      },
+    },
+  );
+}
 
-const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 587,
-  secure: false,
-  auth: {
-    user: process.env.EMAIL,
-    pass: process.env.EMAIL_PASSWORD,
-  },
-  connectionTimeout: 15000,
-  greetingTimeout: 15000,
-  socketTimeout: 20000,
-});
-
+app.set("trust proxy", 1);
 
 app.use(session(sessionOptions));
 app.use(flash());
@@ -163,7 +175,7 @@ app.post("/forgot-password", async (req, res) => {
     return res.redirect("/forgot-password");
   }
 
-  const otp = Math.floor(100000 + Math.random() * 900000);
+  const otp = crypto.randomInt(100000, 1000000);
 
   user.resetOTP = otp.toString();
 
@@ -171,22 +183,13 @@ app.post("/forgot-password", async (req, res) => {
 
   await user.save();
 
-  await transporter.sendMail({
-    from: process.env.EMAIL,
-    to: user.email,
-    subject: "Wanderlust Password Reset OTP",
-    html: `
-        <h2>Password Reset</h2>
-        <p>Hello ${user.username},</p>
-        <p>Your OTP is:</p>
-        <h1>${otp}</h1>
-        <p>This OTP is valid for 5 minutes.</p>
-        <p>If you didn't request this, please ignore this email.</p>
-    `,
-  });
-
-  console.log("OTP:", otp);
-  console.log("OTP:",user.email);
+  try {
+    await sendOTPMail(user.email, user.username, otp);
+  } catch (e) {
+    console.log("Mail error:", e.response ? e.response.data : e.message);
+    req.flash("error", "Could not send OTP. Try again.");
+    return res.redirect("/forgot-password");
+  }
 
   res.redirect("/verify-otp");
 });
@@ -330,6 +333,6 @@ app.use((err, req, res, next) => {
   res.status(status).render("error.ejs", { err });
 });
 
-app.listen(8080, () => {
-  console.log("server is listening to port 8080");
+app.listen(process.env.PORT || 8080, () => {
+  console.log("server is listening");
 });
